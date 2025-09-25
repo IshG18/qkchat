@@ -1,1 +1,1 @@
-# qkchat
+# QuickChat
