@@ -1,5 +1,5 @@
 #include <iostream>
-#include "server.hpp"
+#include "server_net.hpp"
 
 enum class MsgIDs : uint32_t {
     ServerPing,

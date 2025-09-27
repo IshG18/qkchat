@@ -1,12 +1,13 @@
 #pragma once
 #include "core.hpp"
-
+#include "client_console.h"
 namespace quickchat {
+
     template <typename ID>
     class clientInterface
     {
         public:
-            clientInterface() : context(), socket(context) {}
+            clientInterface(Terminal *termPtr) : context(), socket(context), term(termPtr) {}
 
             virtual ~clientInterface(){
                 Disconnect();
@@ -22,8 +23,9 @@ namespace quickchat {
                     m_connection = std::make_unique<connection<ID>>(
                         connection<ID>::owner::client, context, asio::ip::tcp::socket(context), messagesIn
                     );
+                    m_connection->attachTerm(term);
 
-                    std::cout << "Starting connection" << '\n';
+                    term->prView("Starting connection");
                     m_connection->ConnectToServer(endpoints);
 
                     thrContxt = std::thread([this](){context.run();});
@@ -72,6 +74,7 @@ namespace quickchat {
             std::thread thrContxt;
             asio::ip::tcp::socket socket;
             std::unique_ptr<connection<ID>> m_connection; //doesn't init it
+            Terminal* term;
 
         private:
             //thread safe queue
