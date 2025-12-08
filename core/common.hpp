@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 
 #define ASIO_STANDALONE
 #include <asio.hpp>

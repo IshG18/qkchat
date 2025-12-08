@@ -1,9 +1,7 @@
 #pragma once
 #include "core.hpp"
-#include "client_console.h"
 
 namespace quickchat {
-    class Terminal;
 
     template<typename ID>
     class connection : std::enable_shared_from_this<connection<ID>>{//passes down shared ptr
@@ -26,14 +24,26 @@ namespace quickchat {
             return id;
         }
 
-        void connPrint(Terminal *term, const std::string &str, connection<ID>::owner parent){
+        /*
+        Will use a setter for the client function 
+        I do have to work out if this will intefer and maybe just having to set it once 
+        */
+        
+        //has to take in a member function so no c-style
+        std::function<void(const std::string&)> logMsg = nullptr; 
+
+        void setLogger(std::function<void(const std::string&)> cbFunc){
+            logMsg = cbFunc;
+        }
+        
+        void connPrint(const std::string &str, connection<ID>::owner parent){
             if (parent == owner::server){
                 std::cout << str << '\n';
             } else {
-                if (term){
-                    term->prView(str.c_str());
+                if (logMsg){
+                    logMsg(str);
                 } else {
-                    std::cout << "Terminal print called, but instance doesn't exist";
+                    std::cout << "Log msg hasn't been set yet"; //For client this wouldn't technically show...
                 }
             }
         }
@@ -52,9 +62,7 @@ namespace quickchat {
                     }
 
                 } else {
-                    //quickchat::Terminal::prView(std::string("["+std::string(id)+"] Read Header Fail.").c_str()); 
-                    //std::cout << "[" << id << "] Read Header Fail.\n"; 
-                    connPrint(term, "["+std::to_string(id)+"] Read Header Fail", OwnerType);
+                    connPrint("["+std::to_string(id)+"] Read Header Fail", OwnerType);
                     m_socket.close();
                 }
             });
@@ -66,8 +74,7 @@ namespace quickchat {
                 if (!ec){
                     AddToMessageQueue();
                 } else {
-                    //std::cout << "[" << id << "] Read Body Fail.\n"; 
-                    connPrint(term, "["+std::to_string(id)+"] Read Body Fail", OwnerType);
+                    connPrint("["+std::to_string(id)+"] Read Body Fail", OwnerType);
                     m_socket.close();
                 }
             });
@@ -98,9 +105,8 @@ namespace quickchat {
                         }
                     }
                 } else {
-                    connPrint(term, "["+std::to_string(id)+"] Write Header Fail", OwnerType);
-                    //std::cout << "[" << id << "] Write Header Fail\n"
-                        //<< ec.message() << " (" << ec.value() << ")\n";
+                    connPrint("["+std::to_string(id)+"] Write Header Fail", OwnerType);
+                    connPrint(std::string(ec.message() + " (" + ec.value() + ")"), OwnerType);
                     m_socket.close();
                 } 
             });
@@ -117,8 +123,7 @@ namespace quickchat {
                     }
 
                 } else {
-                    //std::cout << "[" << id << "] Write Body Fail.\n";
-                    connPrint(term, "["+std::to_string(id)+"] Write Body Fail", OwnerType);
+                    connPrint("["+std::to_string(id)+"] Write Body Fail", OwnerType);
                     m_socket.close();
                 }
             });
@@ -126,10 +131,6 @@ namespace quickchat {
 
 
     public:
-        void attachTerm(Terminal *termPtr){
-            term = termPtr;
-        }    
-
         void ConnectToClient(uint32_t uid = 0){
             if (OwnerType == owner::server){
                 if (m_socket.is_open()){
@@ -186,8 +187,6 @@ namespace quickchat {
 
         owner OwnerType; //defaults to server
         uint32_t id = 0;
-
-        Terminal* term = nullptr;;
 
         //Handshake validation
         uint64_t validationOut = 0;

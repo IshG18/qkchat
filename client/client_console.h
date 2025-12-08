@@ -116,8 +116,8 @@ namespace quickchat {
 
         }
 
-        //neds to hadle inout
-        //nees to show cmds somehow at bottom
+        //needs to handle inout
+        //needs to show cmds somehow at bottom
     };
 }
 

@@ -51,7 +51,8 @@ namespace quickchat
                         std::shared_ptr<connection<ID>> newconn = std::make_shared<connection<ID>>(connection<ID>::owner::server, m_asioContext,
                         std::move(socket), messagesIN);
 
-                        if (OnClientConnect(newconn)){
+                        //relies on the true state of onclient connect b4 overidden, might want to change it to a diff func, or smth else
+                        if (OnClientConnect(newconn)){ 
                             clientDeque.push_back(std::move(newconn));
                             clientDeque.back()->ConnectToClient(nIDCounter++);
 
@@ -137,7 +138,7 @@ namespace quickchat
         }
 
         virtual void OnClientDisconnect(std::shared_ptr<connection<ID>> client){
-            
+            //Override in main
         }
 
             

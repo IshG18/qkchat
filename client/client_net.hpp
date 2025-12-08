@@ -23,14 +23,19 @@ namespace quickchat {
                     m_connection = std::make_unique<connection<ID>>(
                         connection<ID>::owner::client, context, asio::ip::tcp::socket(context), messagesIn
                     );
-                    m_connection->attachTerm(term);
+
+                    //init logger func thru lambda
+                    m_connection->setLogger([this](const std::string& msg){
+                        term->prView(msg.c_str());
+                    });
 
                     term->prView("Starting connection");
                     m_connection->ConnectToServer(endpoints);
 
                     thrContxt = std::thread([this](){context.run();});
                 } catch (std::exception &e) {
-                    std::cerr << "Client Exception: " << e.what() << '\n';
+                    const std::string& err = std::string("Client Exception:") + e.what() + "\n";
+                    term->prView(err.c_str());
                     return false;
                 }
 
@@ -46,9 +51,8 @@ namespace quickchat {
             }
 
             void Disconnect(){
-                if (IsConnected()){
-                    m_connection->Disconnect(); //bit more graceful of a disconnection
-                }
+                if (IsConnected()) m_connection->Disconnect(); //bit more graceful of a disconnection
+                
 
                 //done with context
                 context.stop();
@@ -59,8 +63,7 @@ namespace quickchat {
 
         public:
             void Send(const message<ID> &msg){
-                if (IsConnected())
-                m_connection->Send(msg);
+                if (IsConnected()) m_connection->Send(msg);
             }
 
             //Retrieves queue
