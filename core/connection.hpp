@@ -106,7 +106,7 @@ namespace quickchat {
                     }
                 } else {
                     connPrint("["+std::to_string(id)+"] Write Header Fail", OwnerType);
-                    connPrint(std::string(ec.message() + " (" + ec.value() + ")"), OwnerType);
+                    connPrint(std::string(ec.message()) + " (" + std::to_string(ec.value()) + ")", OwnerType);
                     m_socket.close();
                 } 
             });
