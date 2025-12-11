@@ -13,11 +13,12 @@ namespace quickchat {
         WINDOW *optsView;
 
         int curY = 1;
+        int y,x;
 
         Terminal(){
             initscr();
             start_color();
-            int y, x, yBeg, xBeg, yMax, xMax;
+            int yBeg, xBeg, yMax, xMax;
 
             if (!has_colors()) {
                 endwin();
@@ -61,13 +62,10 @@ namespace quickchat {
             wattron(optsView, COLOR_PAIR(3));
             mvwprintw(optsView, 1, 11, ":p [Ping]");
             wattroff(optsView, COLOR_PAIR(3));
-            wattron(optsView, COLOR_PAIR(4));
-            mvwprintw(optsView, 1, 21, ":t [Test Print]");
-            wattroff(optsView, COLOR_PAIR(4));
+            // wattron(optsView, COLOR_PAIR(4));
+            // mvwprintw(optsView, 1, 21, ":t [Test Print]");
+            // wattroff(optsView, COLOR_PAIR(4));
             wprintw(msgInput, "> ");
-
-            //getyx(optsView, y, x);
-            //mvwprintw(msgView, 1, 1, "Y: %d X: %d", y, x);
 
             wrefresh(msgView);
             wrefresh(msgInput);
@@ -90,7 +88,7 @@ namespace quickchat {
             box(msgInput, ACS_VLINE, (int)' ');
             wattroff(msgInput, COLOR_PAIR(2));
             wmove(msgInput, 1, 1);
-            wprintw(msgInput, "> %s", str); //add this to init win
+            wprintw(msgInput, "> %s", str);
             wrefresh(msgInput);
         }
 

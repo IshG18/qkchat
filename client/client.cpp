@@ -17,29 +17,31 @@ int main(){
     bool bQuit = false;
     while (!bQuit){
 
-        term.ch = wgetch(term.msgInput); //gets the char(int) typed, and updates text
+        term.ch = wgetch(term.msgInput); //allows for user input, gets the char(int) typed
         if (term.ch != ERR){
-            if (term.ch == '\n'){ //Handles when user presses enter ||| HOW TO DEAL WITH REGULAR ENTERS?????????
+            if (term.ch == '\n'){ //Handles when user presses enter
 
                 //checking for commands
-                text.erase(std::remove(
-                    text.begin(), text.end(), ' '), text.end()
-                );
-
                 if (text == ":q"){
                     term.termClose();
                     client.Disconnect();
                     bQuit = true;
-                } else if (text == ":t"){
-                    term.prView("Sent from input");
                 } else if (text == ":p"){
                     continue;
+                    
                 } else {
-                    //prints word to chatbox, resets input, and reset text
+                    //prints word to chatbox, reset text and reset input
                     term.prView(text.c_str());
                     text = "";
                     term.prInput(text.c_str());
                 }
+
+            } else if (term.ch == '\b'){ //Handles pressing backspace
+                getyx(term.msgInput, term.y, term.x);
+                
+                //it's easier to just redraw the whole box, instead of mvwdelch
+                text.pop_back();
+                term.prInput(text.c_str());
 
             } else {
                 //Bounds checking and fixing
