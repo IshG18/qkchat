@@ -13,32 +13,37 @@ int main(){
     //need to check for input
     client.Connect("REMOVED_SECRET", REMOVED_SECRET); //doesnt keep the client connected
     std::string text = "";
-    std::string cmdstr = "";
 
     bool bQuit = false;
     while (!bQuit){
 
-        term.ch = wgetch(term.msgInput); //allow for continous str checking
+        term.ch = wgetch(term.msgInput); //gets the char(int) typed, and updates text
         if (term.ch != ERR){
-            if (term.ch == '\n'){
-                term.prInput(text.c_str());
-                text = "";
-            } else {
-                text += term.ch;
-                //Bounds checking and fixing
-            }
-            cmdstr = text; //cmd checks CHANGE THIS TO BE AFTER \N
-            cmdstr.erase(std::remove(
-                cmdstr.begin(), cmdstr.end(), ' '), cmdstr.end());
+            if (term.ch == '\n'){ //Handles when user presses enter ||| HOW TO DEAL WITH REGULAR ENTERS?????????
 
-            if (cmdstr == ":q"){
-                client.Disconnect();
-                term.termClose();
-                bQuit = true;
-            } else if (cmdstr == ":t"){
-                term.prView("Sent from input");
-            } else if (cmdstr == ":p"){
-                continue;
+                //checking for commands
+                text.erase(std::remove(
+                    text.begin(), text.end(), ' '), text.end()
+                );
+
+                if (text == ":q"){
+                    term.termClose();
+                    client.Disconnect();
+                    bQuit = true;
+                } else if (text == ":t"){
+                    term.prView("Sent from input");
+                } else if (text == ":p"){
+                    continue;
+                } else {
+                    //prints word to chatbox, resets input, and reset text
+                    term.prView(text.c_str());
+                    text = "";
+                    term.prInput(text.c_str());
+                }
+
+            } else {
+                //Bounds checking and fixing
+                text += term.ch;
             }
         }
 
@@ -56,7 +61,7 @@ int main(){
                 }
             }
         } else {
-            term.prView("Server Down");
+            term.prView("Disconnected from server!");
             bQuit = true;
         }
     }
@@ -70,5 +75,4 @@ will need a funciton to be called while client is connecting
 will need a function to efficnet update client list
 will need a way to essientially always need input
 will need to always have cmd options on screen
-
 */

@@ -24,7 +24,7 @@ namespace quickchat {
                         connection<ID>::owner::client, context, asio::ip::tcp::socket(context), messagesIn
                     );
 
-                    //init logger func thru lambda
+                    //init logger func thru lambda | Havent tested if it works
                     m_connection->setLogger([this](const std::string& msg){
                         term->prView(msg.c_str());
                     });

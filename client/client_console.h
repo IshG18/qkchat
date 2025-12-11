@@ -53,6 +53,7 @@ namespace quickchat {
             wmove(msgInput, 1, 1);
             nodelay(msgInput, TRUE);
             wattroff(msgInput, COLOR_PAIR(2));
+            
 
             wattron(optsView, COLOR_PAIR(1));
             mvwprintw(optsView, 1, 1, ":q [Quit]");
@@ -63,7 +64,7 @@ namespace quickchat {
             wattron(optsView, COLOR_PAIR(4));
             mvwprintw(optsView, 1, 21, ":t [Test Print]");
             wattroff(optsView, COLOR_PAIR(4));
-
+            wprintw(msgInput, "> ");
 
             //getyx(optsView, y, x);
             //mvwprintw(msgView, 1, 1, "Y: %d X: %d", y, x);
@@ -83,7 +84,7 @@ namespace quickchat {
             endwin(); //Cleanly destroy
         }
 
-        void prInput(const char *str){
+        void prInput(const char *str){ //reprints the whole input box
             wclear(msgInput);
             wattron(msgInput, COLOR_PAIR(2));
             box(msgInput, ACS_VLINE, (int)' ');
@@ -93,7 +94,7 @@ namespace quickchat {
             wrefresh(msgInput);
         }
 
-        void prView(const char *str){
+        void prView(const char *str){ //prints to the chat log
             wprintw(msgView, "%s", str);
             curY ++;
             wrefresh(msgView);
