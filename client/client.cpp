@@ -23,15 +23,15 @@ int main(){
 
                 //checking for commands
                 if (text == ":q"){
-                    term.termClose();
-                    client.Disconnect();
                     bQuit = true;
+                    client.Disconnect();
+                    term.termClose();
                 } else if (text == ":p"){
                     continue;
-                    
+
                 } else {
                     //prints word to chatbox, reset text and reset input
-                    term.prView(text.c_str());
+                    term.prText(text.c_str());
                     text = "";
                     term.prInput(text.c_str());
                 }
@@ -51,19 +51,19 @@ int main(){
 
         if (client.IsConnected()){
             if (!client.Incoming().empty()){ //Checks for messages
-                term.prView("NEW MESSAGE");
+                term.prText("NEW MESSAGE");
                 quickchat::message<MsgIDs> msg = client.Incoming().pop_front().msg;
 
                 switch (msg.header.id){
                     case MsgIDs::ServerAccept:
                     {
-                        term.prView("Server accepted connection!");
+                        term.prText("Server accepted connection!");
                     }
                     break;
                 }
             }
         } else {
-            term.prView("Disconnected from server!");
+            term.prText("Disconnected from server!");
             bQuit = true;
         }
     }

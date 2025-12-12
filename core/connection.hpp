@@ -23,14 +23,9 @@ namespace quickchat {
         uint32_t GetID() const{
             return id;
         }
-
-        /*
-        Will use a setter for the client function 
-        I do have to work out if this will intefer and maybe just having to set it once 
-        */
         
-        //has to take in a member function so no c-style
-        std::function<void(const std::string&)> logMsg = nullptr; 
+        //Function to be set to client function thru setter
+        std::function<void(const std::string&)> logMsg = nullptr;  //has to take in a member function so no c-style
 
         void setLogger(std::function<void(const std::string&)> cbFunc){
             logMsg = cbFunc;

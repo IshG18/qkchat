@@ -24,18 +24,18 @@ namespace quickchat {
                         connection<ID>::owner::client, context, asio::ip::tcp::socket(context), messagesIn
                     );
 
-                    //init logger func thru lambda | Havent tested if it works
+                    //init logger func thru lambda
                     m_connection->setLogger([this](const std::string& msg){
-                        term->prView(msg.c_str());
+                        term->prText(msg.c_str());
                     });
 
-                    term->prView("Starting connection");
+                    m_connection->logMsg("Starting connection");
                     m_connection->ConnectToServer(endpoints);
 
                     thrContxt = std::thread([this](){context.run();});
                 } catch (std::exception &e) {
                     const std::string& err = std::string("Client Exception:") + e.what() + "\n";
-                    term->prView(err.c_str());
+                    m_connection->logMsg(err.c_str());
                     return false;
                 }
 
@@ -76,7 +76,7 @@ namespace quickchat {
             asio::io_context context;
             std::thread thrContxt;
             asio::ip::tcp::socket socket;
-            std::unique_ptr<connection<ID>> m_connection; //doesn't init it
+            std::unique_ptr<connection<ID>> m_connection;
             Terminal* term;
 
         private:

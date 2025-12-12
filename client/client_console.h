@@ -22,13 +22,13 @@ namespace quickchat {
 
             if (!has_colors()) {
                 endwin();
-                prView("Terminal does not support color, should quit");
+                prText("Terminal does not support color, should quit");
             }
 
             init_pair(2, COLOR_GREEN, COLOR_BLACK);
             init_pair(1, COLOR_CYAN, COLOR_BLACK);
             init_pair(3, COLOR_MAGENTA, COLOR_BLACK);
-            init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+            init_pair(4, COLOR_YELLOW, COLOR_BLACK); //unused
             
             attron(COLOR_PAIR(2));
             printw("~~~~~~~~~~~~~~ Starting QuickChat ~~~~~~~~~~~~~~");
@@ -62,9 +62,6 @@ namespace quickchat {
             wattron(optsView, COLOR_PAIR(3));
             mvwprintw(optsView, 1, 11, ":p [Ping]");
             wattroff(optsView, COLOR_PAIR(3));
-            // wattron(optsView, COLOR_PAIR(4));
-            // mvwprintw(optsView, 1, 21, ":t [Test Print]");
-            // wattroff(optsView, COLOR_PAIR(4));
             wprintw(msgInput, "> ");
 
             wrefresh(msgView);
@@ -92,7 +89,7 @@ namespace quickchat {
             wrefresh(msgInput);
         }
 
-        void prView(const char *str){ //prints to the chat log
+        void prText(const char *str){ //prints to the chat log
             wprintw(msgView, "%s", str);
             curY ++;
             wrefresh(msgView);
