@@ -52,9 +52,9 @@ namespace quickchat {
             wattron(msgInput, COLOR_PAIR(2));
             box(msgInput, ACS_VLINE, (int)' ');
             wmove(msgInput, 1, 1);
-            nodelay(msgInput, TRUE);
             wattroff(msgInput, COLOR_PAIR(2));
-            
+            nodelay(msgInput, true);
+            keypad(msgInput, true);
 
             wattron(optsView, COLOR_PAIR(1));
             mvwprintw(optsView, 1, 1, ":q [Quit]");

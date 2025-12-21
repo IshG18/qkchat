@@ -36,15 +36,34 @@ int main(){
                     term.prInput(text.c_str());
                 }
 
-            } else if (term.ch == '\b'){ //Handles pressing backspace
+            } else if (term.ch == '\b' && text != ""){ //Handles pressing backspace |  FNEEDS A BOUNDRARY CHECK
                 getyx(term.msgInput, term.y, term.x);
+                //term.prText(std::string("val: " + std::to_string(term.x)).c_str());
                 
-                //it's easier to just redraw the whole box, instead of mvwdelch
-                text.pop_back();
-                term.prInput(text.c_str());
+                if (term.x - 2 == text.length()){ //cusor is at the end
+                    text.pop_back();
+                    term.prInput(text.c_str()); //it's easier to just redraw the whole box, instead of mvwdelc
+                    
+                } else if (term.x -2 < text.length() && term.x > 2){ //cursor isn't at end of text, and not out of bounds
+                    text.erase(term.x-3, 1); //the cursor is one behind of what user does, so -3
+                    term.prInput(text.c_str());
+                    wmove(term.msgInput, term.y, term.x);
+                }
 
+                
+            } else if (term.ch == KEY_LEFT){
+                wmove(term.msgInput, getcury(term.msgInput), getcurx(term.msgInput)-1);
+
+            } else if (term.ch == KEY_RIGHT){
+                if (!(getcurx(term.msgInput) -3 >= text.length())){ //user cant move past the end of the string
+                    wmove(term.msgInput, getcury(term.msgInput), getcurx(term.msgInput)+1);
+                }
+                
+                
             } else {
-                //Bounds checking and fixing
+                //Bounds checking and fixing && 
+                //Might have to move bounds checks outside it its own if so it can stop arrow movemnts and backspace?
+                //Or just make a function to reuuse
                 text += term.ch;
             }
         }
@@ -71,10 +90,7 @@ int main(){
     return 0;
 }
 
-/*Will need a start function to greet
+/*
 will need a funciton to print out chat list
-will need a funciton to be called while client is connecting
 will need a function to efficnet update client list
-will need a way to essientially always need input
-will need to always have cmd options on screen
 */
