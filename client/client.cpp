@@ -59,7 +59,6 @@ int main(){
                     wmove(term.msgInput, getcury(term.msgInput), getcurx(term.msgInput)+1);
                 }
                 
-                
             } else {
                 //Bounds checking and fixing && 
                 //Might have to move bounds checks outside it its own if so it can stop arrow movemnts and backspace?
