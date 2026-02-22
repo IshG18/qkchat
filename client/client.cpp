@@ -27,7 +27,7 @@ int main(){
                     client.Disconnect();
                     term.termClose();
                 } else if (text == ":p"){
-                    continue;
+                    client.PingServer();
 
                 } else {
                     //prints word to chatbox, reset text and reset input
@@ -69,13 +69,21 @@ int main(){
 
         if (client.IsConnected()){
             if (!client.Incoming().empty()){ //Checks for messages
-                term.prText("NEW MESSAGE");
                 quickchat::message<MsgIDs> msg = client.Incoming().pop_front().msg;
 
                 switch (msg.header.id){
                     case MsgIDs::ServerAccept:
                     {
                         term.prText("Server accepted connection!");
+                    }
+                    break;
+
+                    case MsgIDs::ServerPing:
+                    {
+                        std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+                        std::chrono::system_clock::time_point timeThen;
+                        msg >> timeThen;
+                        term.prText(std::string("Ping: " + std::to_string(std::chrono::duration<double>(timeNow - timeThen).count())).c_str());
                     }
                     break;
                 }

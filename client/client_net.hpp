@@ -71,6 +71,17 @@ namespace quickchat {
                 return messagesIn;
             }
 
+            //Pings server 
+            void PingServer(){
+                quickchat::message<ID> msg;
+                msg.header.id = ID::ServerPing;
+
+                //Sending a time point to server, expexting to recieve one back
+                std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+                msg << timeNow;
+                Send(msg);
+            }
+
 
         protected:
             asio::io_context context;

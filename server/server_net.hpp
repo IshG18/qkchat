@@ -108,7 +108,6 @@ namespace quickchat
 
             size_t messageCnt = 0;
             while (messageCnt < maxMessages && !messagesIN.empty()){
-                std::cout << "New Message" << '\n';
                 owned_message<ID> msgStruct = messagesIN.pop_front();
 
                 //Pass to the message handler
@@ -127,7 +126,7 @@ namespace quickchat
             switch (msg.header.id){
                 case ID::ServerPing:
                 {std::cout << "[" << client->GetID() << "]: Pinged Server!\n";
-                client->Send(msg);}
+                client->Send(msg);} //sending back message to client
                 break;
             }
         }

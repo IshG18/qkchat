@@ -18,7 +18,6 @@ protected:
         quickchat::message<MsgIDs> msg;
         msg.header.id = MsgIDs::ServerAccept;
         client->Send(msg);
-        std::cout << "Sent Connection Message to " << client->GetID() << '\n';
         return true;
     }   
 

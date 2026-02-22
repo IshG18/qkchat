@@ -4,7 +4,7 @@
 namespace quickchat {
 
     template<typename ID>
-    class connection : std::enable_shared_from_this<connection<ID>>{//passes down shared ptr
+    class connection : public std::enable_shared_from_this<connection<ID>>{//passes down shared ptr
 
     public:
         enum class owner {

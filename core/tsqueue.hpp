@@ -11,7 +11,6 @@ namespace quickchat {
             tsqueue(const tsqueue<ID>&) = delete;
             virtual ~tsqueue() { clear(); }
 
-        
         public:
             const ID& front(){
                 std::scoped_lock lock(muxQueue);
