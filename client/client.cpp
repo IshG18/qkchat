@@ -6,7 +6,55 @@ enum class MsgIDs : uint32_t {
     ServerAccept
 };
 
-int main(){
+//Windows C API func to resize console 
+void resizeConsole(int rows, int cols){
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE) return;
+
+    //Enable Virtual Terminal Processing
+    DWORD dwMode = 0;
+    GetConsoleMode(hOut, &dwMode);
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(hOut, dwMode);
+
+    //Send VT sequence
+    std::cout << "\x1b[8;" << cols << ";" << rows << "t" << std::flush;
+}
+
+//Windows C API func to gen console
+void createConsole(){
+    char fPath[MAX_PATH];
+    GetModuleFileNameA(NULL, fPath, MAX_PATH);
+
+    //Windoww's "wishlist"
+    STARTUPINFOA si = { sizeof(si)}; //init
+    PROCESS_INFORMATION pi;
+
+    //sets new process to child so it doesnt loop & passes down console size
+    std::string commandLine = std::string(fPath) + " --spawned"; 
+
+    //Spawn a new process of this .exe, then kill this parent process
+    if (CreateProcessA(
+        NULL, (LPSTR)commandLine.c_str(), NULL, NULL, 
+        FALSE, CREATE_NEW_CONSOLE, NULL, NULL,
+        &si, &pi
+    )
+    ){
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        exit(0);
+    }
+}
+
+int main(int argc, char* argv[]){
+    //Check if we are the parent or child process to spawn tui
+    if (argc < 2 || std::string(argv[1]) != "--spawned"){
+        createConsole();
+    } else {
+        resizeConsole(52, 37);
+        Sleep(200); //avoids race condition
+    }
+
     quickchat::Terminal term;
     quickchat::clientInterface<MsgIDs> client(&term);
 
