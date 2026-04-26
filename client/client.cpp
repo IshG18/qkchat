@@ -57,15 +57,26 @@ int main(int argc, char* argv[]){
 
     quickchat::Terminal term;
     quickchat::clientInterface<MsgIDs> client(&term);
+    short LMAX = 0;
+    short RMAX = 49;
+    short YMAX = 9;
 
     //need to check for input
     client.Connect("REMOVED_SECRET", REMOVED_SECRET); //doesnt keep the client connected
     std::string text = "";
 
+    getyx(term.msgInputInner, term.y, term.x);
+    // term.prText(std::string(
+    //     "x val:" + std::to_string(term.x) +
+    //     ", text len:" + std::to_string(text.length()) + 
+    //     ", y val:" + std::to_string(term.y)
+    // ).c_str()); //init with info
+
     bool bQuit = false;
     while (!bQuit){
 
-        term.ch = wgetch(term.msgInput); //allows for user input, gets the char(int) typed
+        term.ch = wgetch(term.msgInputInner); //allows for user input, gets the char(int) typed
+        int pastRows = term.y - 1;
         if (term.ch != ERR){
             if (term.ch == '\n'){ //Handles when user presses enter
 
@@ -77,6 +88,14 @@ int main(int argc, char* argv[]){
                 } else if (text == ":p"){
                     client.PingServer();
 
+                } else if (text == ":c"){
+                    wclear(term.msgView);
+                    wattron(term.msgView, COLOR_PAIR(2));
+                    box(term.msgView, 0, 0);
+                    wattroff(term.msgView, COLOR_PAIR(2));
+                    wmove(term.msgView, 1, 1);
+                    wrefresh(term.msgView);
+                    term.curY = 1;
                 } else {
                     //prints word to chatbox, reset text and reset input
                     term.prText(text.c_str());
@@ -84,34 +103,80 @@ int main(int argc, char* argv[]){
                     term.prInput(text.c_str());
                 }
 
-            } else if (term.ch == '\b' && text != ""){ //Handles pressing backspace |  FNEEDS A BOUNDRARY CHECK
-                getyx(term.msgInput, term.y, term.x);
-                //term.prText(std::string("val: " + std::to_string(term.x)).c_str());
-                
-                if (term.x - 2 == text.length()){ //cusor is at the end
+            } else if (term.ch == '\b'){ //Handles Backspace
+                getyx(term.msgInputInner, term.y, term.x);
+
+                if (term.y == 0 && term.x <= 2) { //cursor is at front
+                    continue;  
+
+                } else if ((term.y == 0 && term.x - 2 == text.length()) || (48 + 50*pastRows + term.x == text.length()) ){ //cursor at the end
                     text.pop_back();
-                    term.prInput(text.c_str()); //it's easier to just redraw the whole box, instead of mvwdelc
-                    
-                } else if (term.x -2 < text.length() && term.x > 2){ //cursor isn't at end of text, and not out of bounds
-                    text.erase(term.x-3, 1); //the cursor is one behind of what user does, so -3
                     term.prInput(text.c_str());
-                    wmove(term.msgInput, term.y, term.x);
+                  
+                } else { //cursor inbetween text 
+                    if (term.y == 0){
+                        text.erase(term.x-3, 1); //the -2 for curPos -1 for correct index
+                        term.prInput(text.c_str());
+                        wmove(term.msgInputInner, term.y, term.x-1);
+
+                    } else { //term.y != 0
+                        int curPos = 48 + 50*pastRows + term.x;
+                        text.erase(curPos-1, 1);
+                        term.prInput(text.c_str());
+                        if (term.x == LMAX){
+                            wmove(term.msgInputInner, term.y-1, RMAX);
+                        } else{
+                            wmove(term.msgInputInner, term.y, term.x-1);
+                        }
+                    }
                 }
 
-                
             } else if (term.ch == KEY_LEFT){
-                wmove(term.msgInput, getcury(term.msgInput), getcurx(term.msgInput)-1);
+                getyx(term.msgInputInner, term.y, term.x);
+                
+                //bounds check
+                if (term.y == 0 && term.x <= 2){
+                    continue;
+                } else if (term.y != 0 && term.x == LMAX){
+                    wmove(term.msgInputInner, term.y-1, 49);
+                } else {
+                    wmove(term.msgInputInner, term.y, term.x-1);
+                }
 
             } else if (term.ch == KEY_RIGHT){
-                if (!(getcurx(term.msgInput) -3 >= text.length())){ //user cant move past the end of the string
-                    wmove(term.msgInput, getcury(term.msgInput), getcurx(term.msgInput)+1);
+                getyx(term.msgInputInner, term.y, term.x);
+
+                //Cant move past end of string
+                if (term.x == 49 && term.y == YMAX){ //true border
+                    continue;
+                } else if (term.x == 49){ 
+                    wmove(term.msgInputInner, term.y+1, 0);
+                    term.y++; //doesn't register yet
+                } else if (term.x -2 <= text.length() && term.y == 0){ 
+                    wmove(term.msgInputInner, term.y, term.x+1);
+                } else if (term.y != 0 ){
+                    if (48 + 50*pastRows + term.x <= text.length()){
+                        wmove(term.msgInputInner, term.y, term.x+1);
+                    }
                 }
-                
-            } else {
-                //Bounds checking and fixing && 
-                //Might have to move bounds checks outside it its own if so it can stop arrow movemnts and backspace?
-                //Or just make a function to reuuse
+
+            } else if ((term.x >= 48 && term.y == YMAX) || term.hitBorder == true){ //49th space reserved for cursor
+                if (term.x >= 48 && term.y == YMAX) term.hitBorder = true;
+                continue;
+
+
+            }else { //ALLOW INSERT INBETWEEN TEXT
+                getyx(term.msgInputInner, term.y, term.x);
                 text += term.ch;
+                term.prInput(std::string(text).c_str());
+
+                // if ((term.y == 0 && term.x >= 48) || term.y == 1) {
+                //     term.prText(std::string(
+                //         "x val:" + std::to_string(term.x) + //+1 accounts for the val we just added
+                //         ", text len:" + std::to_string(text.length()) + 
+                //         ", cursor pos?:" + std::to_string(48 + (term.x))
+                //     ).c_str());
+                // }
             }
         }
 
