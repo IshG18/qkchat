@@ -60,6 +60,7 @@ int main(int argc, char* argv[]){
     short LMAX = 0;
     short RMAX = 49;
     short YMAX = 9;
+    short textMax = 496;
 
     //need to check for input
     client.Connect("REMOVED_SECRET", REMOVED_SECRET); //doesnt keep the client connected
@@ -69,10 +70,10 @@ int main(int argc, char* argv[]){
     bool bQuit = false;
     while (!bQuit){
 
-        term.ch = wgetch(term.msgInputInner); //allows for user input, gets the char(int) typed
+        term.ch = wgetch(term.msgInputInner); //allows for user input
         int pastRows = term.y - 1;
         if (term.ch != ERR){
-            if (term.ch == '\n'){ //Handles when user presses enter
+            if (term.ch == '\n'){ //on enter
 
                 //checking for commands
                 if (text == ":q"){
@@ -115,7 +116,7 @@ int main(int argc, char* argv[]){
                         wmove(term.msgInputInner, term.y, term.x-1);
                         if (term.hitBorder) term.hitBorder = false;
 
-                    } else { //term.y != 0
+                    } else {
                         const int curPos = 48 + 50*pastRows + term.x;
                         text.erase(curPos-1, 1);
                         term.prInput(text.c_str());
@@ -149,18 +150,23 @@ int main(int argc, char* argv[]){
                 } else if (term.x == 49){ 
                     wmove(term.msgInputInner, term.y+1, 0);
                     term.y++; //doesn't register yet
-                } else if (term.x -2 <= text.length() && term.y == 0){ 
+                } else if (term.x -2 < text.length() && term.y == 0){ 
                     wmove(term.msgInputInner, term.y, term.x+1);
                 } else if (term.y != 0 ){
-                    if (48 + 50*pastRows + term.x <= text.length()){
+                    if (48 + 50*pastRows + term.x < text.length()){
                         wmove(term.msgInputInner, term.y, term.x+1);
                     }
                 }
 
-            } else if ((term.x >= 48 && term.y == YMAX) || term.hitBorder == true){ //49th space reserved for cursor
-                if (term.x >= 48 && term.y == YMAX) term.hitBorder = true;
+            } else if (text.length() == textMax || term.hitBorder == true){ //border is at x = 48 or len = 496
+                if (text.length() == textMax) term.hitBorder = true;
                 continue;
 
+            }else if (term.ch == KEY_UP){
+                continue;
+
+            }else if (term.ch == KEY_DOWN){
+                continue;
 
             }else {
                 getyx(term.msgInputInner, term.y, term.x);
