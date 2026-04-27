@@ -66,12 +66,6 @@ int main(int argc, char* argv[]){
     std::string text = "";
 
     getyx(term.msgInputInner, term.y, term.x);
-    // term.prText(std::string(
-    //     "x val:" + std::to_string(term.x) +
-    //     ", text len:" + std::to_string(text.length()) + 
-    //     ", y val:" + std::to_string(term.y)
-    // ).c_str()); //init with info
-
     bool bQuit = false;
     while (!bQuit){
 
@@ -112,15 +106,17 @@ int main(int argc, char* argv[]){
                 } else if ((term.y == 0 && term.x - 2 == text.length()) || (48 + 50*pastRows + term.x == text.length()) ){ //cursor at the end
                     text.pop_back();
                     term.prInput(text.c_str());
+                    if (term.hitBorder) term.hitBorder = false;
                   
                 } else { //cursor inbetween text 
                     if (term.y == 0){
                         text.erase(term.x-3, 1); //the -2 for curPos -1 for correct index
                         term.prInput(text.c_str());
                         wmove(term.msgInputInner, term.y, term.x-1);
+                        if (term.hitBorder) term.hitBorder = false;
 
                     } else { //term.y != 0
-                        int curPos = 48 + 50*pastRows + term.x;
+                        const int curPos = 48 + 50*pastRows + term.x;
                         text.erase(curPos-1, 1);
                         term.prInput(text.c_str());
                         if (term.x == LMAX){
@@ -128,6 +124,7 @@ int main(int argc, char* argv[]){
                         } else{
                             wmove(term.msgInputInner, term.y, term.x-1);
                         }
+                        if (term.hitBorder) term.hitBorder = false;
                     }
                 }
 
@@ -165,18 +162,36 @@ int main(int argc, char* argv[]){
                 continue;
 
 
-            }else { //ALLOW INSERT INBETWEEN TEXT
+            }else {
                 getyx(term.msgInputInner, term.y, term.x);
-                text += term.ch;
-                term.prInput(std::string(text).c_str());
+                const int curPos = 48 + 50*pastRows + term.x;
+                if (term.y == 0 && term.x -2 < text.length()){  
+                    text.insert(term.x-2, 1, term.ch);
+                    term.prInput(std::string(text).c_str());
+                    if (term.x == RMAX){
+                        wmove(term.msgInputInner, term.y+1, 0);
+                        term.y++;
+                        term.x = 0;
+                    } else {
+                        wmove(term.msgInputInner, term.y, term.x+1);
+                        term.x++;
+                    }
+                } else if (term.y != 0 && curPos < text.length()){
+                    text.insert(curPos, 1, term.ch);
+                    term.prInput(std::string(text).c_str());
+                    if (term.x == RMAX){
+                        wmove(term.msgInputInner, term.y+1, 0);
+                        term.y++;
+                        term.x = 0;
+                    } else {
+                        wmove(term.msgInputInner, term.y, term.x+1);
+                        term.x++;
+                    }
 
-                // if ((term.y == 0 && term.x >= 48) || term.y == 1) {
-                //     term.prText(std::string(
-                //         "x val:" + std::to_string(term.x) + //+1 accounts for the val we just added
-                //         ", text len:" + std::to_string(text.length()) + 
-                //         ", cursor pos?:" + std::to_string(48 + (term.x))
-                //     ).c_str());
-                // }
+                } else {
+                    text += term.ch;
+                    term.prInput(std::string(text).c_str());
+                }
             }
         }
 
