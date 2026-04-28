@@ -8,10 +8,11 @@ namespace quickchat {
     {
     public:
         int ch;
+        WINDOW *inputBorder;
         WINDOW *msgInput;
         WINDOW *msgView;
         WINDOW *optsView;
-        WINDOW *msgInputInner;
+        WINDOW *viewBorder;
 
         int curY = 1;
         int y = 0; int x = 0;
@@ -36,27 +37,26 @@ namespace quickchat {
             printw("~~~~~~~~~~~~~~ Starting QuickChat ~~~~~~~~~~~~~~");
             attroff(COLOR_PAIR(2));
 
-            msgView = newwin(21, 52, 1, 0);
-            msgInput = newwin(12, 52, 22, 0);
+            viewBorder = newwin(21, 52, 1, 0);
+            inputBorder = newwin(12, 52, 22, 0);
             optsView = newwin(3, 52, 34, 0);
-            msgInputInner = derwin(msgInput, 10, 50, 1, 1); //x & y -2
-
+            msgInput = derwin(inputBorder, 10, 50, 1, 1); //x & y -2
+            msgView = derwin(viewBorder, 19, 50, 1, 1);
             refresh();
 
-            //defining View box
-            wattron(msgView, COLOR_PAIR(2));
-            box(msgView, 0, 0);
-            wattroff(msgView, COLOR_PAIR(2));
-            wmove(msgView, 1, 1);
+            //defining View borders
+            wattron(viewBorder, COLOR_PAIR(2));
+            box(viewBorder, 0, 0);
+            wattroff(viewBorder, COLOR_PAIR(2));
 
             wattron(optsView, COLOR_PAIR(2));
             box(optsView, 0, 0);
             wattroff(optsView, COLOR_PAIR(2));
 
-            //defining Borders
-            wattron(msgInput, COLOR_PAIR(2));
-            box(msgInput, ACS_VLINE, (int)' ');
-            wattroff(msgInput, COLOR_PAIR(2));
+            //defining Text Borders
+            wattron(inputBorder, COLOR_PAIR(2));
+            box(inputBorder, ACS_VLINE, (int)' ');
+            wattroff(inputBorder, COLOR_PAIR(2));
 
             //defining Options box
             wattron(optsView, COLOR_PAIR(1));
@@ -70,44 +70,46 @@ namespace quickchat {
             wattroff(optsView, COLOR_PAIR(4));
 
             //def Text box
-            nodelay(msgInputInner, true);
-            keypad(msgInputInner, true);
+            nodelay(msgInput, true);
+            keypad(msgInput, true);
             noecho();
-            wprintw(msgInputInner, "> ");
-            
+            wprintw(msgInput, "> ");
 
-            wrefresh(msgView);
-            wrefresh(msgInput);
+            wrefresh(viewBorder);
+            wrefresh(inputBorder);
             wrefresh(optsView);
-            wrefresh(msgInputInner);
+            wrefresh(msgInput);
         }
 
         ~Terminal(){
+            delwin(inputBorder);
+            delwin(viewBorder);
+            delwin(optsView);
             delwin(msgInput);
             delwin(msgView);
-            delwin(optsView);
-            delwin(msgInputInner);
             endwin(); //Cleanly destroy
         }
 
         void prInput(const char *str){ //reprints the whole input box
-            wclear(msgInputInner);
-            wprintw(msgInputInner, "> %s", str);
-            wrefresh(msgInputInner);
+            wclear(msgInput);
+            wprintw(msgInput, "> %s", str);
+            wrefresh(msgInput);
         }
 
         void prText(const char *str){ //prints to the chat log
             wprintw(msgView, "%s", str);
             curY ++;
             wrefresh(msgView);
-            wmove(msgView, curY, 1);
+            wmove(msgView, curY, 0);
             
         }
 
         void termClose(){
+           delwin(inputBorder);
+            delwin(viewBorder);
+            delwin(optsView);
             delwin(msgInput);
             delwin(msgView);
-            delwin(optsView);
             endwin();
         }
 

@@ -66,11 +66,11 @@ int main(int argc, char* argv[]){
     client.Connect("REMOVED_SECRET", REMOVED_SECRET); //doesnt keep the client connected
     std::string text = "";
 
-    getyx(term.msgInputInner, term.y, term.x);
+    getyx(term.msgInput, term.y, term.x);
     bool bQuit = false;
     while (!bQuit){
 
-        term.ch = wgetch(term.msgInputInner); //allows for user input
+        term.ch = wgetch(term.msgInput); //allows for user input
         int pastRows = term.y - 1;
         if (term.ch != ERR){
             if (term.ch == '\n'){ //on enter
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]){
                 }
 
             } else if (term.ch == '\b'){ //Handles Backspace
-                getyx(term.msgInputInner, term.y, term.x);
+                getyx(term.msgInput, term.y, term.x);
 
                 if (term.y == 0 && term.x <= 2) { //cursor is at front
                     continue;  
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]){
                     if (term.y == 0){
                         text.erase(term.x-3, 1); //the -2 for curPos -1 for correct index
                         term.prInput(text.c_str());
-                        wmove(term.msgInputInner, term.y, term.x-1);
+                        wmove(term.msgInput, term.y, term.x-1);
                         if (term.hitBorder) term.hitBorder = false;
 
                     } else {
@@ -121,40 +121,40 @@ int main(int argc, char* argv[]){
                         text.erase(curPos-1, 1);
                         term.prInput(text.c_str());
                         if (term.x == LMAX){
-                            wmove(term.msgInputInner, term.y-1, RMAX);
+                            wmove(term.msgInput, term.y-1, RMAX);
                         } else{
-                            wmove(term.msgInputInner, term.y, term.x-1);
+                            wmove(term.msgInput, term.y, term.x-1);
                         }
                         if (term.hitBorder) term.hitBorder = false;
                     }
                 }
 
             } else if (term.ch == KEY_LEFT){
-                getyx(term.msgInputInner, term.y, term.x);
+                getyx(term.msgInput, term.y, term.x);
                 
                 //bounds check
                 if (term.y == 0 && term.x <= 2){
                     continue;
                 } else if (term.y != 0 && term.x == LMAX){
-                    wmove(term.msgInputInner, term.y-1, 49);
+                    wmove(term.msgInput, term.y-1, 49);
                 } else {
-                    wmove(term.msgInputInner, term.y, term.x-1);
+                    wmove(term.msgInput, term.y, term.x-1);
                 }
 
             } else if (term.ch == KEY_RIGHT){
-                getyx(term.msgInputInner, term.y, term.x);
+                getyx(term.msgInput, term.y, term.x);
 
                 //Cant move past end of string
                 if (term.x == 49 && term.y == YMAX){ //true border
                     continue;
                 } else if (term.x == 49){ 
-                    wmove(term.msgInputInner, term.y+1, 0);
+                    wmove(term.msgInput, term.y+1, 0);
                     term.y++; //doesn't register yet
                 } else if (term.x -2 < text.length() && term.y == 0){ 
-                    wmove(term.msgInputInner, term.y, term.x+1);
+                    wmove(term.msgInput, term.y, term.x+1);
                 } else if (term.y != 0 ){
                     if (48 + 50*pastRows + term.x < text.length()){
-                        wmove(term.msgInputInner, term.y, term.x+1);
+                        wmove(term.msgInput, term.y, term.x+1);
                     }
                 }
 
@@ -169,28 +169,28 @@ int main(int argc, char* argv[]){
                 continue;
 
             }else {
-                getyx(term.msgInputInner, term.y, term.x);
+                getyx(term.msgInput, term.y, term.x);
                 const int curPos = 48 + 50*pastRows + term.x;
                 if (term.y == 0 && term.x -2 < text.length()){  
                     text.insert(term.x-2, 1, term.ch);
                     term.prInput(std::string(text).c_str());
                     if (term.x == RMAX){
-                        wmove(term.msgInputInner, term.y+1, 0);
+                        wmove(term.msgInput, term.y+1, 0);
                         term.y++;
                         term.x = 0;
                     } else {
-                        wmove(term.msgInputInner, term.y, term.x+1);
+                        wmove(term.msgInput, term.y, term.x+1);
                         term.x++;
                     }
                 } else if (term.y != 0 && curPos < text.length()){
                     text.insert(curPos, 1, term.ch);
                     term.prInput(std::string(text).c_str());
                     if (term.x == RMAX){
-                        wmove(term.msgInputInner, term.y+1, 0);
+                        wmove(term.msgInput, term.y+1, 0);
                         term.y++;
                         term.x = 0;
                     } else {
-                        wmove(term.msgInputInner, term.y, term.x+1);
+                        wmove(term.msgInput, term.y, term.x+1);
                         term.x++;
                     }
 
