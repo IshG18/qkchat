@@ -2,3 +2,4 @@
 *.exe
 asio-1.36.0/
 PDCurses/
+.env

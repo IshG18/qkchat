@@ -57,13 +57,15 @@ int main(int argc, char* argv[]){
 
     quickchat::Terminal term;
     quickchat::clientInterface<MsgIDs> client(&term);
-    short LMAX = 0;
-    short RMAX = 49;
-    short YMAX = 9;
-    short textMax = 496;
+    const short LMAX = 0;
+    const short RMAX = 49;
+    const short YMAX = 9;
+    const short textMax = 496;
+    const std::string host = std::getenv("SERVER_ADDRESS");
+    const int port = std::stoi(std::getenv("SERVER_PORT"));
 
     //need to check for input
-    client.Connect("REMOVED_SECRET", REMOVED_SECRET); //doesnt keep the client connected
+    client.Connect(host, port); //doesnt keep the client connected
     std::string text = "";
 
     getyx(term.msgInput, term.y, term.x);

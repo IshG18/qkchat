@@ -29,7 +29,8 @@ protected:
 
 
 int main(){
-    Server server(REMOVED_SECRET);
+    const int port = std::stoi(std::getenv("SERVER_PORT"));
+    Server server(port);
     server.Start();
 
     while (1){
