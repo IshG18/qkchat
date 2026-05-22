@@ -2,41 +2,53 @@
 #include <iostream>
 #include <string>
 #include <curses.h>
+#include <initializer_list>
 
 namespace quickchat {
     class Terminal 
     {
     public:
-        int ch;
+        int ch = 0;
+        int namech = 0;
+        int curY = 0;
+        int y = 0; 
+        int x = 0;
+        bool hitBorder = false;
+        bool startedT = false;
+        std::string userName = "";
+
         WINDOW *inputBorder;
         WINDOW *msgInput;
         WINDOW *msgView;
         WINDOW *optsView;
         WINDOW *viewBorder;
-
-        int curY = 1;
-        int y = 0; int x = 0;
-        bool hitBorder = false;
+        WINDOW *nameScreen;
+        WINDOW *inputBox;
 
         Terminal(){
             initscr();
             start_color();
-            int yBeg, xBeg, yMax, xMax;
 
             if (!has_colors()) {
+                erase();
+                refresh();
                 endwin();
-                prText("Terminal does not support color, should quit");
+                std::cout << "Terminal does not support color, quitting" << std::endl;
             }
 
+            startedT = true;
             init_pair(2, COLOR_GREEN, COLOR_BLACK);
             init_pair(1, COLOR_CYAN, COLOR_BLACK);
             init_pair(3, COLOR_MAGENTA, COLOR_BLACK);
-            init_pair(4, COLOR_YELLOW, COLOR_BLACK); 
-            
-            attron(COLOR_PAIR(2));
-            printw("~~~~~~~~~~~~~~ Starting QuickChat ~~~~~~~~~~~~~~");
-            attroff(COLOR_PAIR(2));
+            init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+            init_pair(5, COLOR_BLUE, COLOR_BLACK);
+        }
 
+        ~Terminal(){
+            termClose();
+        }
+
+        void start(){            
             viewBorder = newwin(21, 52, 1, 0);
             inputBorder = newwin(12, 52, 22, 0);
             optsView = newwin(3, 52, 34, 0);
@@ -68,6 +80,9 @@ namespace quickchat {
             wattron(optsView, COLOR_PAIR(4));
             mvwprintw(optsView, 1, 21, ":c [Clear]");
             wattroff(optsView, COLOR_PAIR(4));
+            wattron(optsView, COLOR_PAIR(5));
+            mvwprintw(optsView, 1, 32, ":l [Player List]");
+            wattroff(optsView, COLOR_PAIR(5));
 
             //def Text box
             nodelay(msgInput, true);
@@ -81,14 +96,37 @@ namespace quickchat {
             wrefresh(msgInput);
         }
 
-        ~Terminal(){
-            delwin(inputBorder);
-            delwin(viewBorder);
-            delwin(optsView);
-            delwin(msgInput);
-            delwin(msgView);
-            endwin(); //Cleanly destroy
-        }
+        //Function for getting and storing username
+        void getName(){
+            nameScreen = newwin(37, 52, 0, 0);
+            nodelay(nameScreen, false);
+            keypad(nameScreen, true);
+            noecho();
+
+            wattron(nameScreen, COLOR_PAIR(2));
+            box(nameScreen, 0, 0);
+            mvwprintw(nameScreen, 12, 18, "Enter a Username");
+            wattroff(nameScreen, COLOR_PAIR(2));
+            wrefresh(nameScreen);
+
+            wattron(nameScreen, COLOR_PAIR(2));
+            mvwprintw(nameScreen, 15, 12, "___________________________");
+            wattroff(nameScreen, COLOR_PAIR(2));
+            wrefresh(nameScreen);
+
+            inputBox = derwin(nameScreen, 1, 20, 14, 16);
+            wmove(nameScreen, 14, 16); //moving to inputbox
+            wrefresh(inputBox);
+            wrefresh(nameScreen);
+        };
+
+        void clear(std::initializer_list<WINDOW*> winList){
+            for (WINDOW* win: winList){
+                delwin(win);
+            }
+            erase();
+            refresh();
+        };
 
         void prInput(const char *str){ //reprints the whole input box
             wclear(msgInput);
@@ -100,29 +138,23 @@ namespace quickchat {
             wprintw(msgView, "%s", str);
             curY ++;
             wrefresh(msgView);
-            wmove(msgView, curY, 0);
-            
+            wmove(msgView, curY, 0);    
         }
 
         void termClose(){
-           delwin(inputBorder);
-            delwin(viewBorder);
-            delwin(optsView);
-            delwin(msgInput);
-            delwin(msgView);
-            endwin();
+            if (startedT){
+                delwin(inputBorder);
+                delwin(viewBorder);
+                delwin(optsView);
+                delwin(msgInput);
+                delwin(msgView);
+                erase();
+                refresh();
+                endwin();
+                
+                startedT = false;
+            }
         }
-
-        void showTxts(){
-
-        }
-
-        void waiting(){
-
-        }
-
-        //needs to handle inout
-        //needs to show cmds somehow at bottom
     };
 }
 
@@ -133,6 +165,3 @@ will need a funciton to be called while client is connecting
 will need a function to efficnet update client list
 will need a way to essientially always need input
 will need to always have cmd options on screen8*/
-
-
-//std::system("powershell -NoProfile -Command Write-Host \"~~~~~~~~~~~~~ Starting QuickChat ~~~~~~~~~~~~~\" -ForegroundColor Green");

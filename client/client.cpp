@@ -1,5 +1,6 @@
 #include <iostream>
 #include "client_net.hpp"
+#include "windows.h"
 
 enum class MsgIDs : uint32_t {
     ServerPing,
@@ -8,18 +9,37 @@ enum class MsgIDs : uint32_t {
 
 //Windows C API func to resize console 
 void resizeConsole(int rows, int cols){
+    // HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    // if (hOut == INVALID_HANDLE_VALUE) return;
+
+    // //Enable Virtual Terminal Processing
+    // DWORD dwMode = 0;
+    // GetConsoleMode(hOut, &dwMode);
+    // dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    // SetConsoleMode(hOut, dwMode);
+
+    // //Send VT sequence
+    // std::cout << "\x1b[8;" << cols << ";" << rows << "t" << std::flush;
+    
+    //AI Attempt to fix issue with dpi scale
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hOut == INVALID_HANDLE_VALUE) return;
+    if (hOut == INVALID_HANDLE_VALUE){
+        printf("invalid handle\n");
+        return;
+    }
 
-    //Enable Virtual Terminal Processing
-    DWORD dwMode = 0;
-    GetConsoleMode(hOut, &dwMode);
-    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-    SetConsoleMode(hOut, dwMode);
+    SMALL_RECT temp = {0, 0, 1, 1};
+    if (!SetConsoleWindowInfo(hOut, TRUE, &temp))
+        printf("shrink failed: %lu\n", GetLastError());
 
-    //Send VT sequence
-    std::cout << "\x1b[8;" << cols << ";" << rows << "t" << std::flush;
-}
+    COORD bufferSize = { (SHORT)rows, (SHORT)cols };
+    if (!SetConsoleScreenBufferSize(hOut, bufferSize))
+        printf("buffer failed: %lu\n", GetLastError());
+
+    SMALL_RECT windowSize = { 0, 0, (SHORT)(rows - 1), (SHORT)(cols - 1) };
+    if (!SetConsoleWindowInfo(hOut, TRUE, &windowSize))
+        printf("window failed: %lu\n", GetLastError());
+    }
 
 //Windows C API func to gen console
 void createConsole(){
@@ -31,7 +51,7 @@ void createConsole(){
     PROCESS_INFORMATION pi;
 
     //sets new process to child so it doesnt loop & passes down console size
-    std::string commandLine = std::string(fPath) + " --spawned"; 
+    std::string commandLine = "conhost.exe " + std::string(fPath) + " --spawned"; 
 
     //Spawn a new process of this .exe, then kill this parent process
     if (CreateProcessA(
@@ -52,17 +72,52 @@ int main(int argc, char* argv[]){
         createConsole();
     } else {
         resizeConsole(52, 37);
-        Sleep(200); //avoids race condition
+        Sleep(100); //avoids race condition
     }
 
     quickchat::Terminal term;
-    quickchat::clientInterface<MsgIDs> client(&term);
+
     const short LMAX = 0;
     const short RMAX = 49;
     const short YMAX = 9;
     const short textMax = 496;
     const std::string host = std::getenv("SERVER_ADDRESS");
     const int port = std::stoi(std::getenv("SERVER_PORT"));
+    
+
+    //Login Screen
+    term.getName();
+
+    while(true) {
+        term.namech = wgetch(term.nameScreen);
+
+        if((term.namech == KEY_ENTER || term.namech == '\n' || term.namech == '\r') && !term.userName.empty()) {
+            break;
+
+        } else if(term.namech == KEY_BACKSPACE || term.namech == 127 || term.namech == '\b') {
+            if(!term.userName.empty()) {
+                term.userName.pop_back();
+                mvwprintw(term.inputBox, 0, term.userName.size(), " ");
+                wmove(term.nameScreen, 14, 16 + (int)term.userName.size());
+                wrefresh(term.nameScreen);
+                wrefresh(term.inputBox);
+            }
+
+        } else if(term.namech == KEY_LEFT || term.namech == KEY_RIGHT) {
+            continue;
+
+        } else if(term.namech != ERR && term.namech >= 32 && term.namech <= 126 && term.userName.size() < 20) {
+            term.userName += (char)term.namech;
+            mvwprintw(term.inputBox, 0, term.userName.size()-1, "%c", term.namech);
+            wmove(term.nameScreen, 14, 16 + (int)term.userName.size());
+            wrefresh(term.nameScreen);
+            wrefresh(term.inputBox);
+            }
+        }
+
+    term.clear({term.nameScreen, term.inputBox});
+    term.start();
+    quickchat::clientInterface<MsgIDs> client(&term);
 
     //need to check for input
     client.Connect(host, port); //doesnt keep the client connected
