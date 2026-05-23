@@ -9,37 +9,18 @@ enum class MsgIDs : uint32_t {
 
 //Windows C API func to resize console 
 void resizeConsole(int rows, int cols){
-    // HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    // if (hOut == INVALID_HANDLE_VALUE) return;
-
-    // //Enable Virtual Terminal Processing
-    // DWORD dwMode = 0;
-    // GetConsoleMode(hOut, &dwMode);
-    // dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-    // SetConsoleMode(hOut, dwMode);
-
-    // //Send VT sequence
-    // std::cout << "\x1b[8;" << cols << ";" << rows << "t" << std::flush;
-    
-    //AI Attempt to fix issue with dpi scale
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hOut == INVALID_HANDLE_VALUE){
-        printf("invalid handle\n");
-        return;
-    }
 
+    //shrink size so buffer doesnt conflict
     SMALL_RECT temp = {0, 0, 1, 1};
-    if (!SetConsoleWindowInfo(hOut, TRUE, &temp))
-        printf("shrink failed: %lu\n", GetLastError());
+    SetConsoleWindowInfo(hOut, TRUE, &temp);
 
     COORD bufferSize = { (SHORT)rows, (SHORT)cols };
-    if (!SetConsoleScreenBufferSize(hOut, bufferSize))
-        printf("buffer failed: %lu\n", GetLastError());
+    SetConsoleScreenBufferSize(hOut, bufferSize);
 
     SMALL_RECT windowSize = { 0, 0, (SHORT)(rows - 1), (SHORT)(cols - 1) };
-    if (!SetConsoleWindowInfo(hOut, TRUE, &windowSize))
-        printf("window failed: %lu\n", GetLastError());
-    }
+    SetConsoleWindowInfo(hOut, TRUE, &windowSize);
+}
 
 //Windows C API func to gen console
 void createConsole(){
@@ -74,16 +55,20 @@ int main(int argc, char* argv[]){
         resizeConsole(52, 37);
         Sleep(100); //avoids race condition
     }
+    
+    if (!std::getenv("SERVER_ADDRESS") || !std::getenv("SERVER_PORT")){
+        std::cout << "NO ENV VARS SET\n";
+        Sleep(3000);
+        return 1; 
+    }
 
     quickchat::Terminal term;
-
     const short LMAX = 0;
     const short RMAX = 49;
     const short YMAX = 9;
-    const short textMax = 496;
+    const short textMax = 496;    
     const std::string host = std::getenv("SERVER_ADDRESS");
     const int port = std::stoi(std::getenv("SERVER_PORT"));
-    
 
     //Login Screen
     term.getName();

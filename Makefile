@@ -4,7 +4,7 @@ CXX := g++
 #flags for warnings + optimization level + includes
 CXXFLAGS := -std=c++17 -Wall -O2 \
 	-I./asio-1.36.0/include \
-	-I./core 
+	-I./core
 
 LDFLAGS := -lws2_32 -lmswsock -luser32 -lkernel32
 SRC := $(wildcard core/*.hpp)
