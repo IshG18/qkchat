@@ -1,13 +1,17 @@
 #pragma once
 #include "core.hpp"
 #include "client_console.h"
+#include "../server/server_net.hpp"
 namespace quickchat {
 
     template <typename ID>
     class clientInterface
     {
         public:
-            clientInterface(Terminal *termPtr) : context(), socket(context), term(termPtr) {}
+            clientInterface(Terminal *termPtr)
+            : context(),
+              socket(context),
+              term(termPtr){}
 
             virtual ~clientInterface(){
                 Disconnect();
@@ -52,7 +56,6 @@ namespace quickchat {
 
             void Disconnect(){
                 if (IsConnected()) m_connection->Disconnect(); //bit more graceful of a disconnection
-                
 
                 //done with context
                 context.stop();

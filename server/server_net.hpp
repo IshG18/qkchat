@@ -8,10 +8,8 @@ namespace quickchat
     {
         public:
             serverInterface(uint16_t port)
-            : asioAccepter(m_asioContext, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port))
-        {
-            
-        }
+            : m_asioContext(),
+              asioAccepter(m_asioContext, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)){}
 
         virtual ~serverInterface(){
             Stop();
@@ -54,17 +52,18 @@ namespace quickchat
                         //relies on the true state of onclient connect b4 overidden, might want to change it to a diff func, or smth else
                         if (OnClientConnect(newconn)){ 
                             clientDeque.push_back(std::move(newconn));
-                            clientDeque.back()->ConnectToClient(nIDCounter++);
-
+                            clientDeque.back()->ConnectToClient(this, nIDCounter++);
                             std::cout << "[" << clientDeque.back()->GetID() << "] Connection Approved\n";
-
                         } else {
                             std::cout << "[-----] Connection Denied\n";
                             }
                     } else {
                         std::cout << "[SERVER] New Connection Error " << ec.message() << '\n';
                     }
+
                 WaitForClientConnection();
+
+
 
                 });
         }
@@ -74,11 +73,6 @@ namespace quickchat
                 client->Send(msg);
             } else {
                 OnClientDisconnect(client);
-                client.reset();
-
-                clientDeque.erase(
-                    std::remove(clientDeque.begin(), clientDeque.end(), client), clientDeque.end()
-                );
             }
         }
 
@@ -90,7 +84,6 @@ namespace quickchat
                         client->Send(msg);
                     }
                 } else {
-                    OnClientDisconnect(client);
                     client.reset();
                     bInvalidClient = true;
                 }
@@ -116,11 +109,10 @@ namespace quickchat
             }
         }
 
-        virtual void OnClientValidation(std::shared_ptr<connection<ID>> client){
-
+        virtual void OnClientValidated(std::shared_ptr<connection<ID>> client){
+            //override in main
         }
 
-         
         protected:
         virtual void OnMessage(std::shared_ptr<connection<ID>> client, message<ID>& msg){
             switch (msg.header.id){
@@ -131,9 +123,8 @@ namespace quickchat
             }
         }
 
-        virtual bool OnClientConnect(std::shared_ptr<connection<ID>> client){
+        virtual bool OnClientConnect(std::shared_ptr<connection<ID>> client){ //make a better use for this or remove it
             //Override in main
-            return true;
         }
 
         virtual void OnClientDisconnect(std::shared_ptr<connection<ID>> client){

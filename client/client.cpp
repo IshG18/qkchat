@@ -2,11 +2,6 @@
 #include "client_net.hpp"
 #include "windows.h"
 
-enum class MsgIDs : uint32_t {
-    ServerPing,
-    ServerAccept
-};
-
 //Windows C API func to resize console 
 void resizeConsole(int rows, int cols){
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -56,9 +51,7 @@ int main(int argc, char* argv[]){
         Sleep(100); //avoids race condition
     }
     
-    if (!std::getenv("SERVER_ADDRESS") || !std::getenv("SERVER_PORT")){
-        std::cout << "NO ENV VARS SET\n";
-        Sleep(3000);
+    if (!quickchat::envCheck()){
         return 1; 
     }
 
@@ -102,7 +95,7 @@ int main(int argc, char* argv[]){
 
     term.clear({term.nameScreen, term.inputBox});
     term.start();
-    quickchat::clientInterface<MsgIDs> client(&term);
+    quickchat::clientInterface<quickchat::MsgIDs> client(&term);
 
     //need to check for input
     client.Connect(host, port); //doesnt keep the client connected
@@ -245,16 +238,16 @@ int main(int argc, char* argv[]){
 
         if (client.IsConnected()){
             if (!client.Incoming().empty()){ //Checks for messages
-                quickchat::message<MsgIDs> msg = client.Incoming().pop_front().msg;
+                quickchat::message<quickchat::MsgIDs> msg = client.Incoming().pop_front().msg;
 
                 switch (msg.header.id){
-                    case MsgIDs::ServerAccept:
+                    case quickchat::MsgIDs::ServerAccept:
                     {
                         term.prText("Server accepted connection!");
                     }
                     break;
 
-                    case MsgIDs::ServerPing:
+                    case quickchat::MsgIDs::ServerPing:
                     {
                         std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
                         std::chrono::system_clock::time_point timeThen;
