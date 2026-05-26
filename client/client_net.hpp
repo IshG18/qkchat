@@ -25,7 +25,7 @@ namespace quickchat {
                     
                     //Initializes connection obj
                     m_connection = std::make_unique<connection<ID>>(
-                        connection<ID>::owner::client, context, asio::ip::tcp::socket(context), messagesIn
+                        quickchat::Owner::client, context, asio::ip::tcp::socket(context), messagesIn
                     );
 
                     //init logger func thru lambda
@@ -33,13 +33,13 @@ namespace quickchat {
                         term->prText(msg.c_str());
                     });
 
-                    m_connection->logMsg("Starting connection");
+                    m_connection->getLogger()("Starting connection");
                     m_connection->ConnectToServer(endpoints);
 
                     thrContxt = std::thread([this](){context.run();});
                 } catch (std::exception &e) {
                     const std::string& err = std::string("Client Exception:") + e.what() + "\n";
-                    m_connection->logMsg(err.c_str());
+                    m_connection->getLogger()(err.c_str());
                     return false;
                 }
 
@@ -77,14 +77,15 @@ namespace quickchat {
             //Pings server 
             void PingServer(){
                 quickchat::message<ID> msg;
+                quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::client> msgWriter{msg};
+                msgWriter.msg = msg;
                 msg.header.id = ID::ServerPing;
 
                 //Sending a time point to server, expexting to recieve one back
                 std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-                msg << timeNow;
+                msgWriter << timeNow;
                 Send(msg);
             }
-
 
         protected:
             asio::io_context context;

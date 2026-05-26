@@ -239,6 +239,7 @@ int main(int argc, char* argv[]){
         if (client.IsConnected()){
             if (!client.Incoming().empty()){ //Checks for messages
                 quickchat::message<quickchat::MsgIDs> msg = client.Incoming().pop_front().msg;
+                quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::client> msgWriter{msg};
 
                 switch (msg.header.id){
                     case quickchat::MsgIDs::ServerAccept:
@@ -251,7 +252,7 @@ int main(int argc, char* argv[]){
                     {
                         std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
                         std::chrono::system_clock::time_point timeThen;
-                        msg >> timeThen;
+                        msgWriter >> timeThen;
                         term.prText(std::string("Ping: " + std::to_string(std::chrono::duration<double>(timeNow - timeThen).count())).c_str());
                     }
                     break;

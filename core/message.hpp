@@ -6,11 +6,15 @@
 
 namespace quickchat
     {
+        //Foward declare the class
+        template <typename ID>
+        class connection;
+
         template <typename ID>
         struct message_header {
             ID id{};
             uint32_t size = 0;
-        };
+        }; 
 
         template <typename ID>
         struct message {
@@ -26,49 +30,48 @@ namespace quickchat
                 os << "ID: " << int(msg.header.id) << "Msg-Head Size:" << msg.header.size;
                 return os;
             }
-
-            //Pushes POD-like data into the message buffer thru <<
-            template<typename DataType>
-            friend message<ID>& operator << (message<ID>& msg, DataType& data){ 
-                //This ensures that only simple, predictable types, important if the code is doing low-level operations like memory copying
-                static_assert(std::is_standard_layout_v<DataType>, "Data is too complex to be pushed");
-
-                size_t i = msg.body.size();
-
-                msg.body.resize(msg.body.size() + sizeof(DataType)); 
-    
-                memcpy(msg.body.data() + i, &data, sizeof(DataType));
-
-                //Recalcs size
-                msg.header.size = msg.size();
-
-                return msg;
-
-            }
-
-            template <typename DataType>
-            friend message<ID>& operator >> (message<ID>& msg, DataType& data){
-                static_assert(std::is_standard_layout_v<DataType>, "Data is too complex to be pushed"); 
-
-                size_t i = msg.body.size() - sizeof(DataType);
-
-                //Copy the data from the buffer into the user variable
-                memcpy(&data, msg.body.data() + i, sizeof(DataType));
-
-                msg.body.resize(i);
-
-                msg.header.size = msg.size();
-
-                return msg;
-            }
         };
-    
-         //Foward declare the class
-        template <typename ID>
-        class connection;
 
+        template <typename ID, quickchat::Owner parent>
+        struct msgWrapper { //wrapper for passing in owner
+            //just a refernce for a msg
+            message<ID>& msg;
+        };
+
+        //Wrapper funcs to move POD-like data in message buffer thru osstream
+
+        template<typename DataType, typename ID,  quickchat::Owner parent>
+        msgWrapper<ID, parent>& operator << (msgWrapper<ID, parent>& writer, DataType& data){
+            //This ensures that only simple, predictable types, important if the code is doing low-level operations like memory copying
+                if constexpr(std::is_trivially_copyable_v<DataType>){ //was is_standard_layout_v
+                    size_t i = writer.msg.body.size();
+                    writer.msg.body.resize(writer.msg.body.size() + sizeof(DataType));
+                    memcpy(writer.msg.body.data() + i, &data, sizeof(DataType));
+                    writer.msg.header.size = writer.msg.size(); //Recalcs size
+                    return writer;
+                } else {
+                    quickchat::connection<ID>::connPrint("Data is too complex to be pushed", parent);
+                    return writer;
+                }
+        }
+
+        template<typename DataType, typename ID, quickchat::Owner parent>
+        msgWrapper<ID, parent>& operator >> (msgWrapper<ID, parent>& writer, DataType& data){
+            if constexpr(std::is_trivially_copyable_v<DataType>){
+                size_t i = writer.msg.body.size() - sizeof(DataType);
+                memcpy(&data, writer.msg.body.data() + i, sizeof(DataType)); //Copy data into user variable
+                writer.msg.body.resize(i);
+                writer.msg.header.size = writer.msg.size();
+                return writer;
+            } else {
+                quickchat::connection<ID>::connPrint("Data is too complex to be pushed into different data type", parent);
+                return writer;
+            }
+        }
+       
+        //Sends client with clients
         template <typename ID>
-        struct owned_message { //inits the shared_ptr but still needs std::make_shared
+        struct owned_message {
             std::shared_ptr<connection<ID>> remote = nullptr; 
             message<ID> msg;
 

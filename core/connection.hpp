@@ -10,17 +10,13 @@ namespace quickchat {
     class connection : public std::enable_shared_from_this<connection<ID>>{//passes down shared ptr
 
     public:
-        enum class owner {
-            server, client
-        };
-
-        connection(owner parent, asio::io_context& asioContext, asio::ip::tcp::socket socket, tsqueue<owned_message<ID>>& qIN)
+        connection(quickchat::Owner parent, asio::io_context& asioContext, asio::ip::tcp::socket socket, tsqueue<owned_message<ID>>& qIN)
             :m_asioContext(asioContext), m_socket(std::move(socket)), messagesIn(qIN)
         {
             OwnerType = parent;
 
             //Validation check, need to pre define for server conn
-            if (OwnerType == owner::server){
+            if (OwnerType == quickchat::Owner::server){
                 validationOut = uint64_t(std::chrono::system_clock::now().time_since_epoch().count());
                 validationCheck = scramble(validationOut);
             }
@@ -32,22 +28,24 @@ namespace quickchat {
         uint32_t GetID() const{
             return id;
         }
-        
-        //Function to be set to client function thru setter
-        std::function<void(const std::string&)> logMsg = nullptr;  //has to take in a member function so no c-style
+
+        static std::function<void(const std::string&)>& getLogger(){ //getter for logMsg
+            static std::function<void(const std::string&)> logMsg = nullptr; //Cant be declared static in class, bc of complex variable type 
+            return logMsg;
+        }
 
         void setLogger(std::function<void(const std::string&)> cbFunc){
-            logMsg = cbFunc;
+            getLogger() = cbFunc;
         }
         
-        void connPrint(const std::string &str, connection<ID>::owner parent){
-            if (parent == owner::server){
+        static void connPrint(const std::string &str, quickchat::Owner parent){
+            if (parent == quickchat::Owner::server){
                 std::cout << str << '\n';
             } else {
-                if (logMsg){
-                    logMsg(str);
+                if (getLogger()){
+                    getLogger()(str); //== auto func getLogger(); func(str); 
                 } else {
-                    std::cout << "Log msg hasn't been set yet"; //For client this wouldn't technically show...
+                    std::cout << str << '\n';
                 }
             }
         }
@@ -85,7 +83,7 @@ namespace quickchat {
         }
 
         void AddToMessageQueue(){
-            if (OwnerType == owner::server){
+            if (OwnerType == quickchat::Owner::server){
                 messagesIn.push_back({this->shared_from_this(), msgsTempIn});
             } else {
                 messagesIn.push_back({nullptr, msgsTempIn});
@@ -144,11 +142,11 @@ namespace quickchat {
             [this](std::error_code ec, std::size_t length)
             {
              if (!ec){
-                if (OwnerType == owner::client){ //client waits
+                if (OwnerType == quickchat::Owner::client){ //client waits
                     ReadHeader();
                 }
              } else {
-                if (OwnerType == owner::server) {
+                if (OwnerType == quickchat::Owner::server) {
                     connPrint("["+std::to_string(id)+"]" + " Write Validation error: " + ec.message(), OwnerType);
                 } else {
                     connPrint("Write Validation error: " + ec.message(), OwnerType);
@@ -162,7 +160,7 @@ namespace quickchat {
             asio::async_read(m_socket, asio::buffer(&validationIn, sizeof(uint64_t)),
             [this, server](std::error_code ec, std::size_t length){
                 if (!ec){
-                    if (OwnerType == owner::server){
+                    if (OwnerType == quickchat::Owner::server){
                         if (validationIn == validationCheck){
                             //client accepted
                             server->OnClientValidated(this->shared_from_this());
@@ -177,7 +175,7 @@ namespace quickchat {
                     }
 
                 } else {
-                    if (OwnerType == owner::server){
+                    if (OwnerType == quickchat::Owner::server){
                         connPrint("["+std::to_string(id)+"]" +  " Disconnected, Read Validation Err: " + ec.message(), OwnerType);    
                     } else {
                         connPrint("Client Disconnected, Read Validation Err: " + ec.message(), OwnerType);
@@ -190,7 +188,7 @@ namespace quickchat {
 
     public:
         void ConnectToClient(quickchat::serverInterface<ID>* server, uint32_t uid = 0){
-            if (OwnerType == owner::server){
+            if (OwnerType == quickchat::Owner::server){
                 if (m_socket.is_open()){
                     id = uid;
 
@@ -202,7 +200,7 @@ namespace quickchat {
         }
 
         void ConnectToServer(const asio::ip::tcp::resolver::results_type& endpoints){
-            if (OwnerType == owner::client){
+            if (OwnerType == quickchat::Owner::client){
                 asio::async_connect(m_socket, endpoints, 
                     [this](std::error_code ec, asio::ip::tcp::endpoint){
                         if (!ec){
@@ -236,7 +234,6 @@ namespace quickchat {
                     
                 });
         }
- 
 
     protected:
         asio::ip::tcp::socket m_socket;
@@ -247,7 +244,7 @@ namespace quickchat {
         message<ID> msgsTempIn; //temp msg vars
         message<ID> msgsTempOut;
 
-        owner OwnerType; //defaults to server
+        quickchat::Owner OwnerType; //defaults to server
         uint32_t id = 0;
 
         //Handshake validation
@@ -255,5 +252,4 @@ namespace quickchat {
         uint64_t validationIn = 0;
         uint64_t validationCheck = 0;            
     };
-
 }
