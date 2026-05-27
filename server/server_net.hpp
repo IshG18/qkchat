@@ -112,8 +112,11 @@ namespace quickchat
                 //override in main
             }
 
-            void chatListUpdate(){
-
+            void newText(std::shared_ptr<connection<ID>> client, message<ID>& msg){
+                //Control chatList
+        
+                //Sends message to all client but the one who sent it
+                //Should be it
             }
 
         protected:
@@ -128,8 +131,8 @@ namespace quickchat
 
                     case ID::Chat_NewMessage:
                     {
-                    std::cout << "[" << client->GetID() << "]: Sent Message\n";
-                    //
+                    std::cout << "[" << client->GetID() << "]: New Text\n";
+                    newText(client, msg);
                     }
                 }
             }

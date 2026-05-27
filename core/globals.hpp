@@ -6,7 +6,7 @@ namespace quickchat {
         ServerPing,
         ServerAccept,
         Chat_GetList, 
-        Chat_NewMessage, 
+        Chat_NewMessage,
 
     };
 
@@ -22,4 +22,6 @@ namespace quickchat {
     enum class Owner {
         server, client
     };
+
+    typedef uint32_t TEXTHEADER;
 }

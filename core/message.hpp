@@ -30,6 +30,23 @@ namespace quickchat
                 os << "ID: " << int(msg.header.id) << "Msg-Head Size:" << msg.header.size;
                 return os;
             }
+
+            message<ID>& appendText(message<ID>& msg, std::string& text){
+                size_t oldSize = msg.body.size();
+                uint32_t textlen = text.length();
+                
+                //push in # of chars first
+                msg.body.resize(msg.body.size() + sizeof(uint32_t));
+                memcpy(msg.body.data()+oldSize, &textlen, sizeof(uint32_t));
+                
+                //push in whole body
+                oldSize = msg.body.size();
+                msg.body.resize(msg.body.size() + textlen);
+                memcpy(msg.body.data()+oldSize, text.data(), textlen);
+
+                msg.header.size = msg.body.size();
+                return msg;
+            }
         };
 
         template <typename ID, quickchat::Owner parent>
@@ -39,7 +56,6 @@ namespace quickchat
         };
 
         //Wrapper funcs to move POD-like data in message buffer thru osstream
-
         template<typename DataType, typename ID,  quickchat::Owner parent>
         msgWrapper<ID, parent>& operator << (msgWrapper<ID, parent>& writer, DataType& data){
             //This ensures that only simple, predictable types, important if the code is doing low-level operations like memory copying
