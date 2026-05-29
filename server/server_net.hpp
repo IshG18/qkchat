@@ -113,10 +113,17 @@ namespace quickchat
             }
 
             void newText(std::shared_ptr<connection<ID>> client, message<ID>& msg){
-                //Control chatList
-        
-                //Sends message to all client but the one who sent it
-                //Should be it
+                msgWrapper<ID, quickchat::Owner::server> writer{msg};
+                std::string text;
+                text = msg.recvText(writer, text);
+                chatList.push_back(text);
+
+                //Same text new msg
+                message<ID> newMsg;
+                newMsg.header.id = quickchat::MsgIDs::Chat_NewMessage;
+                msgWrapper<ID, quickchat::Owner::server> newWriter{newMsg};
+                newMsg.appendText(newWriter, text);
+                MessageAllClients(newMsg, client);
             }
 
         protected:
@@ -126,7 +133,7 @@ namespace quickchat
                     {
                     std::cout << "[" << client->GetID() << "]: Pinged Server!\n";
                     client->Send(msg); //sending back message to client
-                    } 
+                    }
                     break;
 
                     case ID::Chat_NewMessage:

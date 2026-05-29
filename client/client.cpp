@@ -120,14 +120,16 @@ int main(int argc, char* argv[]){
 
                 } else if (text == ":c"){
                     wclear(term.msgView);
-                    wattron(term.msgView, COLOR_PAIR(2));
-                    box(term.msgView, 0, 0);
-                    wattroff(term.msgView, COLOR_PAIR(2));
-                    wmove(term.msgView, 1, 1);
                     wrefresh(term.msgView);
-                    term.curY = 1;
+                    term.curY = 0;
                 } else {
+                    //Send message to server
                     //prints word to chatbox, reset text and reset input
+                    quickchat::message<quickchat::MsgIDs> msg;
+                    quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::client> writer{msg};
+                    msg.header.id = quickchat::MsgIDs::Chat_NewMessage;
+                    msg.appendText(writer, text);
+                    client.Send(msg);
                     term.prText(text.c_str());
                     text = "";
                     term.prInput(text.c_str());
@@ -239,12 +241,16 @@ int main(int argc, char* argv[]){
         if (client.IsConnected()){
             if (!client.Incoming().empty()){ //Checks for messages
                 quickchat::message<quickchat::MsgIDs> msg = client.Incoming().pop_front().msg;
-                quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::client> msgWriter{msg};
+                quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::client> writer{msg};
 
+                //HANDLE QUOTES AND ESCAPE CHARACTERS
                 switch (msg.header.id){
                     case quickchat::MsgIDs::ServerAccept:
                     {
                         term.prText("Server accepted connection!");
+                        wclear(term.msgView);
+                        wrefresh(term.msgView);
+                        term.curY = 0;
                     }
                     break;
 
@@ -252,8 +258,16 @@ int main(int argc, char* argv[]){
                     {
                         std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
                         std::chrono::system_clock::time_point timeThen;
-                        msgWriter >> timeThen;
+                        writer >> timeThen;
                         term.prText(std::string("Ping: " + std::to_string(std::chrono::duration<double>(timeNow - timeThen).count())).c_str());
+                    }
+                    break;
+
+                    case quickchat::MsgIDs::Chat_NewMessage:
+                    {
+                        std::string message;
+                        message = msg.recvText(writer, message);
+                        term.prText(message.c_str());
                     }
                     break;
                 }

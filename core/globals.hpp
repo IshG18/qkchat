@@ -22,6 +22,4 @@ namespace quickchat {
     enum class Owner {
         server, client
     };
-
-    typedef uint32_t TEXTHEADER;
 }

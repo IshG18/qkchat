@@ -10,14 +10,17 @@ LDFLAGS := -lws2_32 -lmswsock -luser32 -lkernel32
 SRC := $(wildcard core/*.hpp)
 MANIFEST  := client/dpi.manifest
 
-all: server.exe client.exe
+all: server client
 
-server.exe: server/server.cpp server/server_net.hpp $(SRC)
+server: server/server.cpp server/server_net.hpp $(SRC)
 	$(CXX) $(CXXFLAGS) server/server.cpp -o server.exe $(LDFLAGS)
 
-client.exe: client/client.cpp client/client_net.hpp client/client_console.h $(SRC)
+client: client/client.cpp client/client_net.hpp client/client_console.h $(SRC)
 	$(CXX) $(CXXFLAGS) -I./PDCurses -L./PDCurses/wincon client/client.cpp -o client.exe $(LDFLAGS) -lpdcurses
 	mt.exe -manifest $(MANIFEST) -outputresource:client.exe;1
+
+test: test.cpp $(SRC) 
+	$(CXX) $(CXXFLAGS) test.cpp -o test.exe $(LDFLAGS)
 
 clean:
 	del /f /q server.exe client.exe

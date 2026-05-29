@@ -43,7 +43,7 @@ namespace quickchat {
                 std::cout << str << '\n';
             } else {
                 if (getLogger()){
-                    getLogger()(str); //== auto func getLogger(); func(str); 
+                    getLogger()(str); // == auto func getLogger(); func(str); 
                 } else {
                     std::cout << str << '\n';
                 }

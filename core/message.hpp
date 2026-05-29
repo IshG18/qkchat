@@ -6,9 +6,13 @@
 
 namespace quickchat
     {
-        //Foward declare the class
+        //Foward declare connection
         template <typename ID>
         class connection;
+
+        //Foward declare msgWrapper
+        template <typename ID, quickchat::Owner parent>
+        struct msgWrapper;
 
         template <typename ID>
         struct message_header {
@@ -27,25 +31,33 @@ namespace quickchat
 
             // overloads printing of message objects
             friend std::ostream& operator << (std::ostream& os, const message<ID>& msg){
-                os << "ID: " << int(msg.header.id) << "Msg-Head Size:" << msg.header.size;
+                os << "ID: " << int(msg.header.id) << " Msg-Head Size:" << msg.header.size;
                 return os;
             }
 
-            message<ID>& appendText(message<ID>& msg, std::string& text){
-                size_t oldSize = msg.body.size();
-                uint32_t textlen = text.length();
+            template<quickchat::Owner parent>
+            void appendText(msgWrapper<ID, parent>& writer, const std::string& text){
+                uint32_t textLen = text.length();
                 
-                //push in # of chars first
-                msg.body.resize(msg.body.size() + sizeof(uint32_t));
-                memcpy(msg.body.data()+oldSize, &textlen, sizeof(uint32_t));
-                
-                //push in whole body
-                oldSize = msg.body.size();
-                msg.body.resize(msg.body.size() + textlen);
-                memcpy(msg.body.data()+oldSize, text.data(), textlen);
+                //first push in text in reverse order
+                for (uint32_t x=0;x<textLen;x++){
+                    writer << text[textLen-x-1]; //-1 for null term
+                }
+                // push in # of chars last
+                writer << textLen;
+            }
 
-                msg.header.size = msg.body.size();
-                return msg;
+            template<quickchat::Owner parent>
+            std::string& recvText(msgWrapper<ID, parent>& writer, std::string& str){
+                uint32_t textLen;
+                char val;
+                writer >> textLen;
+
+                for (uint32_t x=0;x<textLen;x++){
+                    writer >> val;
+                    str += val;
+                } 
+                return str;
             }
         };
 
@@ -70,7 +82,9 @@ namespace quickchat
                     return writer;
                 }
         }
+         
 
+        //Operation for pulling out from the end of an vector
         template<typename DataType, typename ID, quickchat::Owner parent>
         msgWrapper<ID, parent>& operator >> (msgWrapper<ID, parent>& writer, DataType& data){
             if constexpr(std::is_trivially_copyable_v<DataType>){
@@ -85,7 +99,7 @@ namespace quickchat
             }
         }
        
-        //Sends client with clients
+        //Store client with message
         template <typename ID>
         struct owned_message {
             std::shared_ptr<connection<ID>> remote = nullptr; 
