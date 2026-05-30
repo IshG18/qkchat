@@ -91,8 +91,9 @@ int main(int argc, char* argv[]){
             wrefresh(term.nameScreen);
             wrefresh(term.inputBox);
             }
-        }
+    }
 
+    term.userName.erase(std::remove(term.userName.begin(), term.userName.end(), ' '), term.userName.end());
     term.clear({term.nameScreen, term.inputBox});
     term.start();
     quickchat::clientInterface<quickchat::MsgIDs> client(&term);
@@ -123,16 +124,19 @@ int main(int argc, char* argv[]){
                     wrefresh(term.msgView);
                     term.curY = 0;
                 } else {
-                    //Send message to server
-                    //prints word to chatbox, reset text and reset input
-                    quickchat::message<quickchat::MsgIDs> msg;
-                    quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::client> writer{msg};
-                    msg.header.id = quickchat::MsgIDs::Chat_NewMessage;
-                    msg.appendText(writer, text);
-                    client.Send(msg);
-                    term.prText(text.c_str());
-                    text = "";
-                    term.prInput(text.c_str());
+                    if (!text.empty()){
+                        //Send message to server
+                        //prints word to chatbox, reset text and reset input
+                        quickchat::message<quickchat::MsgIDs> msg;
+                        quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::client> writer{msg};
+                        msg.header.id = quickchat::MsgIDs::Chat_NewMessage;
+                        std::string finalStr = term.userName + ": " + text;
+                        msg.appendText(writer, finalStr);
+                        client.Send(msg);
+                        term.prText(finalStr.c_str());
+                        text = "";
+                        term.prInput(text.c_str());
+                    }
                 }
 
             } else if (term.ch == '\b'){ //Handles Backspace
