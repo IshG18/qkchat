@@ -38,7 +38,6 @@ namespace quickchat
             template<quickchat::Owner parent>
             void appendText(msgWrapper<ID, parent>& writer, const std::string& text){
                 uint32_t textLen = text.length();
-                
                 //first push in text in reverse order
                 for (uint32_t x=0;x<textLen;x++){
                     writer << text[textLen-x-1]; //-1 for null term
@@ -58,6 +57,30 @@ namespace quickchat
                     str += val;
                 } 
                 return str;
+            }
+
+            template<quickchat::Owner parent>
+            void appendChatList(msgWrapper<ID, parent>& writer, std::vector<std::string> chatList){
+                size_t vectLen = chatList.size();
+                for (size_t x=0;x<=vectLen-1;++x){
+                    writer.msg.appendText(writer, chatList[vectLen-x-1]);
+                }
+                writer << vectLen;
+            }
+
+            template<quickchat::Owner parent>
+            std::vector<std::string>& recvChatList(msgWrapper<ID, parent>& writer, std::vector<std::string>& newList){
+                size_t vectLen;
+                std::string text;
+
+                writer >> vectLen;
+                
+                for (size_t x=0;x < vectLen; x++){
+                    text = writer.msg.recvText(writer, text);
+                    newList.push_back(text);
+                    text.clear();
+                }
+                return newList;
             }
         };
 

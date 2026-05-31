@@ -49,7 +49,7 @@ namespace quickchat
                             std::shared_ptr<connection<ID>> newconn = std::make_shared<connection<ID>>(quickchat::Owner::server, m_asioContext,
                             std::move(socket), messagesIN);
 
-                            //relies on the true state of onclient connect b4 overidden, might want to change it to a diff func, or smth else
+                            //defaults to true
                             if (OnClientConnect(newconn)){ 
                                 clientDeque.push_back(std::move(newconn));
                                 clientDeque.back()->ConnectToClient(this, nIDCounter++);
@@ -116,7 +116,7 @@ namespace quickchat
                 msgWrapper<ID, quickchat::Owner::server> writer{msg};
                 std::string text;
                 text = msg.recvText(writer, text);
-                chatList.push_back(text);
+                chatListUpt(text);
 
                 //Same text new msg
                 message<ID> newMsg;
@@ -124,6 +124,13 @@ namespace quickchat
                 msgWrapper<ID, quickchat::Owner::server> newWriter{newMsg};
                 newMsg.appendText(newWriter, text);
                 MessageAllClients(newMsg, client);
+            }
+
+            void chatListUpt(std::string& newText){
+                if (chatList.size() >= 15){
+                    chatList.erase(chatList.begin());
+                    chatList.push_back(newText);
+                } else {chatList.push_back(newText);}
             }
 
         protected:

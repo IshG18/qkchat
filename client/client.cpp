@@ -274,6 +274,16 @@ int main(int argc, char* argv[]){
                         term.prText(message.c_str());
                     }
                     break;
+
+                    case quickchat::MsgIDs::Chat_GetList:
+                    {
+                        std::vector<std::string> chatList;
+                        chatList = msg.recvChatList(writer, chatList);
+                        for (std::string text : chatList){
+                            term.prText(text.c_str());
+                        }
+                    }
+                    break;
                 }
             }
         } else {

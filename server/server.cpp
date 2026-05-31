@@ -10,9 +10,19 @@ public:
 
     virtual void OnClientValidated(std::shared_ptr<quickchat::connection<quickchat::MsgIDs>> client){ //Figure how to use both this and OnCLientConnects or get rid of one
         std::cout << "[" << client->GetID() << "]:" << " Validated!\n";
-        quickchat::message<quickchat::MsgIDs> msg;
-        msg.header.id = quickchat::MsgIDs::ServerAccept;
-        client->Send(msg);
+        quickchat::message<quickchat::MsgIDs> acceptMsg;
+        acceptMsg.header.id = quickchat::MsgIDs::ServerAccept;
+        client->Send(acceptMsg);
+
+        //Sending chatList
+        if (!chatList.empty()){
+            quickchat::message<quickchat::MsgIDs> listMsg;
+            listMsg.header.id = quickchat::MsgIDs::Chat_GetList;
+            quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::server> writer{listMsg};
+            listMsg.appendChatList(writer, chatList);
+            client->Send(listMsg);
+        }
+        
     }
 
 protected:
