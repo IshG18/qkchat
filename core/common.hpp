@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <functional>
 #include <vector>
+#include <unordered_map>
 
 #define ASIO_STANDALONE
 #include <asio.hpp>

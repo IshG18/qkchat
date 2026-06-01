@@ -60,16 +60,16 @@ namespace quickchat
             }
 
             template<quickchat::Owner parent>
-            void appendChatList(msgWrapper<ID, parent>& writer, std::vector<std::string> chatList){
-                size_t vectLen = chatList.size();
+            void appendList(msgWrapper<ID, parent>& writer, std::vector<std::string> strList){
+                size_t vectLen = strList.size();
                 for (size_t x=0;x<=vectLen-1;++x){
-                    writer.msg.appendText(writer, chatList[vectLen-x-1]);
+                    writer.msg.appendText(writer, strList[vectLen-x-1]);
                 }
                 writer << vectLen;
             }
 
             template<quickchat::Owner parent>
-            std::vector<std::string>& recvChatList(msgWrapper<ID, parent>& writer, std::vector<std::string>& newList){
+            std::vector<std::string>& recvList(msgWrapper<ID, parent>& writer, std::vector<std::string>& newList){
                 size_t vectLen;
                 std::string text;
 

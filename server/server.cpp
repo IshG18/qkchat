@@ -19,7 +19,7 @@ public:
             quickchat::message<quickchat::MsgIDs> listMsg;
             listMsg.header.id = quickchat::MsgIDs::Chat_GetList;
             quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::server> writer{listMsg};
-            listMsg.appendChatList(writer, chatList);
+            listMsg.appendList(writer, chatList);
             client->Send(listMsg);
         }
         
@@ -34,6 +34,7 @@ protected:
     virtual void OnClientDisconnect(std::shared_ptr<quickchat::connection<quickchat::MsgIDs>> client){
         std::cout << "Removing client [" << client->GetID() << "]\n";
         client.reset();
+        userMap.erase(client);
     }
 };
 

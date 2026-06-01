@@ -7,7 +7,8 @@ namespace quickchat {
         ServerAccept,
         Chat_GetList, 
         Chat_NewMessage,
-
+        Chat_GetUsers,
+        Chat_NewUser,
     };
 
     bool envCheck(){

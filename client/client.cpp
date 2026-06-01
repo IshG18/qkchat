@@ -123,16 +123,21 @@ int main(int argc, char* argv[]){
                     wclear(term.msgView);
                     wrefresh(term.msgView);
                     term.curY = 0;
+                } else if (text == ":l"){
+                    quickchat::message<quickchat::MsgIDs> usrMsg;
+                    quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::client> writer{usrMsg};
+                    usrMsg.header.id = quickchat::MsgIDs::Chat_GetUsers;
+                    client.Send(usrMsg);
                 } else {
                     if (!text.empty()){
                         //Send message to server
                         //prints word to chatbox, reset text and reset input
-                        quickchat::message<quickchat::MsgIDs> msg;
-                        quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::client> writer{msg};
-                        msg.header.id = quickchat::MsgIDs::Chat_NewMessage;
+                        quickchat::message<quickchat::MsgIDs> txtMsg;
+                        quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::client> writer{txtMsg};
+                        txtMsg.header.id = quickchat::MsgIDs::Chat_NewMessage;
                         std::string finalStr = term.userName + ": " + text;
-                        msg.appendText(writer, finalStr);
-                        client.Send(msg);
+                        txtMsg.appendText(writer, finalStr);
+                        client.Send(txtMsg);
                         term.prText(finalStr.c_str());
                         text = "";
                         term.prInput(text.c_str());
@@ -255,6 +260,13 @@ int main(int argc, char* argv[]){
                         wclear(term.msgView);
                         wrefresh(term.msgView);
                         term.curY = 0;
+
+                        //Sending back username
+                        quickchat::message<quickchat::MsgIDs> userMsg;
+                        quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::client> newWriter{userMsg};
+                        userMsg.header.id = quickchat::MsgIDs::Chat_NewUser;
+                        userMsg.appendText(newWriter, term.userName);
+                        client.Send(userMsg);
                     }
                     break;
 
@@ -278,10 +290,27 @@ int main(int argc, char* argv[]){
                     case quickchat::MsgIDs::Chat_GetList:
                     {
                         std::vector<std::string> chatList;
-                        chatList = msg.recvChatList(writer, chatList);
+                        chatList = msg.recvList(writer, chatList);
                         for (std::string text : chatList){
                             term.prText(text.c_str());
                         }
+                    }
+                    break;
+
+                    case quickchat::MsgIDs::Chat_GetUsers:
+                    {
+                        text = "Users: ";
+                        std::vector<std::string> usrList;
+                        usrList = msg.recvList(writer, usrList);
+
+                        for (std::string str : usrList){
+                            if (!(str == usrList[usrList.size()-1])){
+                                text += str + ", ";
+                            } else {
+                                text += str;
+                            }                   
+                        }
+                        term.prInput(text.c_str());
                     }
                     break;
                 }

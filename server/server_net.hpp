@@ -135,19 +135,45 @@ namespace quickchat
 
         protected:
             virtual void OnMessage(std::shared_ptr<connection<ID>> client, message<ID>& msg){
+                msgWrapper<ID, Owner::server> writer {msg};
                 switch (msg.header.id){
                     case ID::ServerPing:
                     {
-                    std::cout << "[" << client->GetID() << "]: Pinged Server!\n";
-                    client->Send(msg); //sending back message to client
+                        std::cout << "[" << client->GetID() << "]: Pinged Server!\n";
+                        client->Send(msg); //sending back message to client
                     }
                     break;
 
                     case ID::Chat_NewMessage:
                     {
-                    std::cout << "[" << client->GetID() << "]: New Text\n";
-                    newText(client, msg);
+                        std::cout << "[" << client->GetID() << "]: New Text\n";
+                        newText(client, msg);
                     }
+                    break;
+
+                    case ID::Chat_GetUsers:
+                    {
+                        message<ID> userMsg;
+                        std::vector<std::string> usrList;
+                        msgWrapper<ID, Owner::server> newWriter {userMsg};
+                        userMsg.header.id = MsgIDs::Chat_GetUsers;
+                        for (const auto& [client, name] : userMap){
+                            usrList.push_back(name);
+                        }
+                        userMsg.appendList(newWriter, usrList);
+                        client->Send(userMsg);
+                    }
+                    break;
+
+                    case ID::Chat_NewUser:
+                    {
+                        std::string user;
+                        user = msg.recvText(writer, user);
+                        userMap[client] = user;
+                        std::cout << "[" << client->GetID() << "]: Username-> " << user << '\n';
+
+                    }
+                    break;
                 }
             }
 
@@ -168,5 +194,6 @@ namespace quickchat
             asio::ip::tcp::acceptor asioAccepter;
             uint32_t nIDCounter = 10000;
             std::vector<std::string> chatList;
+            std::unordered_map<std::shared_ptr<connection<ID>>, std::string> userMap;
     };
 }
