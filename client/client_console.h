@@ -135,6 +135,7 @@ namespace quickchat {
         }
 
         void prText(const char *str){ //prints to the chat log
+            msgCheck();
             wprintw(msgView, "%s", str);
             curY ++;
             wrefresh(msgView);
@@ -153,6 +154,18 @@ namespace quickchat {
                 endwin();
                 
                 startedT = false;
+            }
+        }
+
+        void msgCheck(){
+            //Max curY is 18
+            if (curY > 18){
+                curY = 18;
+
+                //delete oldest line (auto shfits up)
+                wmove(msgView, 0, 0);
+                wdeleteln(msgView);
+                wmove(msgView, curY, 0);
             }
         }
     };

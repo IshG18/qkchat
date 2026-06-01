@@ -252,7 +252,6 @@ int main(int argc, char* argv[]){
                 quickchat::message<quickchat::MsgIDs> msg = client.Incoming().pop_front().msg;
                 quickchat::msgWrapper<quickchat::MsgIDs, quickchat::Owner::client> writer{msg};
 
-                //HANDLE QUOTES AND ESCAPE CHARACTERS
                 switch (msg.header.id){
                     case quickchat::MsgIDs::ServerAccept:
                     {
@@ -323,8 +322,3 @@ int main(int argc, char* argv[]){
 
     return 0;
 }
-
-/*
-will need a funciton to print out chat list
-will need a function to efficnet update client list
-*/
