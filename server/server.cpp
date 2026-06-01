@@ -27,14 +27,15 @@ public:
 
 protected:
     virtual bool OnClientConnect(std::shared_ptr<quickchat::connection<quickchat::MsgIDs>> client){
-        //Need black/white list feature
+        //No black/white list feature
         return true;
     }   
 
     virtual void OnClientDisconnect(std::shared_ptr<quickchat::connection<quickchat::MsgIDs>> client){
         std::cout << "Removing client [" << client->GetID() << "]\n";
-        client.reset();
         userMap.erase(client);
+        client.reset();
+        
     }
 };
 

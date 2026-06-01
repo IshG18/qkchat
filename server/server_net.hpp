@@ -62,9 +62,6 @@ namespace quickchat
                         }
 
                     WaitForClientConnection();
-
-
-
                     });
             }
 
@@ -84,7 +81,7 @@ namespace quickchat
                             client->Send(msg);
                         }
                     } else {
-                        client.reset();
+                        OnClientDisconnect(client);
                         bInvalidClient = true;
                     }
                 }
