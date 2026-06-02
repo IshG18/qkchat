@@ -17,8 +17,8 @@ namespace quickchat {
 
             //Validation check, need to pre define for server conn
             if (OwnerType == quickchat::Owner::server){
-                validationOut = uint64_t(std::chrono::system_clock::now().time_since_epoch().count());
-                validationCheck = scramble(validationOut);
+                svalidationOut = uint64_t(std::chrono::system_clock::now().time_since_epoch().count());
+                validationCheck = scramble(svalidationOut);
             }
 
         }
@@ -132,36 +132,54 @@ namespace quickchat {
         }
 
         //Func to kick random connections
-        uint64_t scramble(uint64_t input){
-            uint64_t out = input ^ 0x1324;
-            return out ^ 0x134;
+        std::string scramble(uint64_t input){
+            std::string strInput = std::to_string(input);
+            //secret would be stored in a real application
+            strInput += "58u3CjrD0UYe9j1LlStjmCzM8zV8LXDixRAzd0GcDSHnwNCeo9";
+            uint8_t hashBuff[32];
+            char hash[64];
+            blake3_hasher hasher;
+            blake3_hasher_init(&hasher);
+            blake3_hasher_update(&hasher, strInput.c_str(), strInput.size());
+            blake3_hasher_finalize(&hasher, hashBuff, sizeof(hashBuff));
+
+            for (int i=0;i<32;++i){
+                sprintf(hash + i*2, "%02x", hashBuff[i]);
+            }
+            return std::string(hash);
         }
 
         void WriteValidation(){
-            asio::async_write(m_socket, asio::buffer(&validationOut, sizeof(uint64_t)),
-            [this](std::error_code ec, std::size_t length)
-            {
-             if (!ec){
-                if (OwnerType == quickchat::Owner::client){ //client waits
-                    ReadHeader();
-                }
-             } else {
-                if (OwnerType == quickchat::Owner::server) {
-                    connPrint("["+std::to_string(id)+"]" + " Write Validation error: " + ec.message(), OwnerType);
-                } else {
-                    connPrint("Write Validation error: " + ec.message(), OwnerType);
-                }
-                m_socket.close();
-             }
-            });
+            if (OwnerType == quickchat::Owner::server){
+                asio::async_write(m_socket, asio::buffer(&svalidationOut, sizeof(uint64_t)),
+                [this](std::error_code ec, std::size_t length)
+                {
+                    if (ec){
+                        connPrint("["+std::to_string(id)+"]" + " Write Validation error: " + ec.message(), OwnerType);
+                        m_socket.close();
+                    } 
+                });
+            } else {
+                asio::async_write(m_socket, asio::buffer(cvalidationOut.data(), cvalidationOut.size()),
+                [this](std::error_code ec, std::size_t length)
+                {
+                    if (!ec){
+                        ReadHeader();
+                    } else {
+                        connPrint("Write Validation error: " + ec.message(), OwnerType);
+                        m_socket.close();
+                    }
+                });
+            }
         }
 
         void ReadValidation(quickchat::serverInterface<ID>* server = nullptr){
-            asio::async_read(m_socket, asio::buffer(&validationIn, sizeof(uint64_t)),
-            [this, server](std::error_code ec, std::size_t length){
-                if (!ec){
-                    if (OwnerType == quickchat::Owner::server){
-                        if (validationIn == validationCheck){
+            if (OwnerType == quickchat::Owner::server){
+                asio::async_read(m_socket, asio::buffer(svalidationIn, sizeof(svalidationIn)),
+                [this, server](std::error_code ec, std::size_t length){
+                    if (!ec){
+                        std::string validationStr(svalidationIn, 64);
+                        if (validationStr == validationCheck){
                             //client accepted
                             server->OnClientValidated(this->shared_from_this());
                             ReadHeader();
@@ -169,21 +187,24 @@ namespace quickchat {
                             connPrint("["+std::to_string(id)+"]" + " Kicked (Validation Fail)", OwnerType);
                             m_socket.close();
                         }
-                    } else {
-                        validationOut = scramble(validationIn);
-                        WriteValidation();
-                    }
 
-                } else {
-                    if (OwnerType == quickchat::Owner::server){
-                        connPrint("["+std::to_string(id)+"]" +  " Disconnected, Read Validation Err: " + ec.message(), OwnerType);    
+                    } else {
+                       connPrint("["+std::to_string(id)+"]" +  " Disconnected, Read Validation Err: " + ec.message(), OwnerType);        
+                        m_socket.close();
+                    }
+                });
+            } else {
+                asio::async_read(m_socket, asio::buffer(&cvalidationIn, sizeof(uint64_t)),
+                [this, server](std::error_code ec, std::size_t length){
+                    if (!ec){
+                        cvalidationOut = scramble(cvalidationIn);
+                        WriteValidation();
                     } else {
                         connPrint("Client Disconnected, Read Validation Err: " + ec.message(), OwnerType);
+                        m_socket.close();
                     }
-                    
-                    m_socket.close();
-                }
-            });
+                });
+            }
         }
 
     public:
@@ -248,8 +269,12 @@ namespace quickchat {
         uint32_t id = 0;
 
         //Handshake validation
-        uint64_t validationOut = 0;
-        uint64_t validationIn = 0;
-        uint64_t validationCheck = 0;            
+        uint64_t svalidationOut = 0;
+        std::string cvalidationOut = "";
+
+        char svalidationIn[64];
+        uint64_t cvalidationIn = 0;
+
+        std::string validationCheck = "";            
     };
 }

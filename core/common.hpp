@@ -15,3 +15,7 @@
 #include <asio.hpp>
 #include <asio/ts/buffer.hpp>
 #include <asio/ts/internet.hpp>
+
+extern "C" {
+    #include "blake3.h"
+}
