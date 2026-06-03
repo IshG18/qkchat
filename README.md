@@ -18,13 +18,24 @@ A simple chatting application with minimal features
 
 Server and Client .exe's avaible  
 For this application the server address and port are tied to enviromental variables  
-Just set the variables and run the .exe
+
+**Git Clone**:
+
+```
+git clone https://github.com/IshG18/qkchat.git
+cd qkchat
+```
+
+Then set the variables and run the .exe
 
 **PS1:**
 
 ```ps1
 $env:SERVER_ADDRESS="127.0.0.1"
 $env:SERVER_PORT="3000"
+
+./server
+./client
 ```
 
 ## Make
