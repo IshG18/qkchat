@@ -33,9 +33,22 @@ void createConsole(){
     if (CreateProcessA(
         NULL, (LPSTR)commandLine.c_str(), NULL, NULL, 
         FALSE, CREATE_NEW_CONSOLE, NULL, NULL,
-        &si, &pi
-    )
+        &si, &pi)
     ){
+        //Disabling snap/align to grid
+        Sleep(200);
+        HWND hwnd = FindWindowA(nullptr, "C:\\WINDOWS\\SYSTEM32\\conhost.exe");
+        
+        if (hwnd){
+            LONG style = GetWindowLong(hwnd, GWL_STYLE);
+            style &= ~WS_THICKFRAME;   // no resize border
+            style &= ~WS_MAXIMIZEBOX;  // no maximize
+            // DO NOT remove WS_CAPTION — that's what lets them drag it
+            SetWindowLong(hwnd, GWL_STYLE, style);
+
+            SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+        }
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
         exit(0);
