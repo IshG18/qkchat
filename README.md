@@ -7,9 +7,9 @@
 
 <div style="display: flex; gap: 20px;">
   <img src="assets/login-screen.png" alt="Login Screen" 
-    style="width: 260px; height: auto;">
+    style="width: 300px; height: auto;">
   <img src="assets/terminal.png" alt="Terminal Screen"
-    style="width: 260px; height: auto;">
+    style="width: 300px; height: auto;">
 </div>
 
 A simple chatting application with minimal features
